@@ -117,20 +117,6 @@
     cursor: pointer; font-size: 12.5px; color: var(--darktext);
   }
   .subtab-btn.active { background: var(--terracotta); color: white; border-color: var(--terracotta); }
-
-  .contact-bar {
-    display: flex; justify-content: flex-end; gap: 20px; font-size: 12.5px;
-    color: var(--warmgray); margin-bottom: 8px;
-  }
-  .contact-bar a { color: var(--warmgray); text-decoration: none; }
-  .contact-bar a:hover { color: var(--terracotta); }
-
-  .legal-panel { margin-top: 14px; }
-  .legal-panel .panel-body ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--darktext); line-height: 1.6; }
-  .site-footer {
-    margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--card-border);
-    font-size: 12px; color: var(--warmgray);
-  }
 </style>
 </head>
 <body>
@@ -221,13 +207,9 @@
 
   <!-- MAIN -->
   <div class="main">
-    <div class="contact-bar">
-      <span>📧 nishanchitral@gmail.com</span>
-      <a href="https://www.linkedin.com/in/YOUR-LINKEDIN-HANDLE" target="_blank">🔗 LinkedIn</a>
-    </div>
     <div class="hero">
       <h1>🏭 WarehouseFlow</h1>
-      <p>Slotting and Picking Efficiency Optimizer • Logistics &amp; Supply Chain Intern Project — built by Nishan C</p>
+      <p>Slotting and Picking Efficiency Optimizer • Logistics &amp; Supply Chain Intern Project</p>
     </div>
 
     <div class="tabs">
@@ -312,33 +294,6 @@
         <div class="table-wrap"><table id="skus-table"></table></div>
       </div>
     </div>
-
-    <!-- PRIVACY & TERMS -->
-    <details class="panel legal-panel">
-      <summary>🔒 Privacy Policy</summary>
-      <div class="panel-body">
-        <ul>
-          <li>This dashboard is a student internship project built for demonstration purposes only.</li>
-          <li>All warehouse layout, SKU, slotting, and picking data shown here is <strong>simulated</strong> — no real customer, vendor, or business data is used or collected.</li>
-          <li>Any records you add through the sidebar forms are stored in this app's own database (Turso/SQLite) solely to power the demo, and are not shared with or sold to third parties.</li>
-          <li>No personal data about visitors (location, device, browsing activity) is collected or tracked by this app.</li>
-        </ul>
-      </div>
-    </details>
-
-    <details class="panel legal-panel">
-      <summary>📄 Terms &amp; Conditions</summary>
-      <div class="panel-body">
-        <ul>
-          <li>This application is provided <strong>as-is</strong>, for educational and portfolio purposes, with no warranty of accuracy, uptime, or fitness for production/commercial use.</li>
-          <li>The slotting recommendations, picking benchmarks, and KPIs shown are generated from simulated data and should not be used for real warehouse operations decisions.</li>
-          <li>You're welcome to explore and interact with the demo (add zones, bins, SKUs, log picks, etc.) — data entered may be reset periodically as part of ongoing development.</li>
-          <li>For questions, feedback, or collaboration inquiries, reach out via the contact links above.</li>
-        </ul>
-      </div>
-    </details>
-
-    <div class="site-footer">© 2026 Nishan C · WarehouseFlow</div>
 
   </div>
 </div>
