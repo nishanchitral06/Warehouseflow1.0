@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WarehouseFlow Dashboard</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+  :root {
+    --charcoal: #2D2D2D;
+    --terracotta: #C1502E;
+    --amber: #D98E4A;
+    --sage: #7A8B6F;
+    --warmgray: #8A8580;
+    --darktext: #3A3633;
+    --cream: #FAF7F2;
+    --card-border: #E5E0D8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #ffffff; color: var(--darktext);
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  }
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 300px; flex-shrink: 0; background: linear-gradient(180deg, #f5f6fb 0%, #eef0fa 100%);
+    border-right: 1px solid #e0e0e0; padding: 20px 16px; overflow-y: auto;
+  }
+  .sidebar-hero {
+    background: linear-gradient(135deg, var(--terracotta) 0%, var(--amber) 100%);
+    border-radius: 12px; padding: 16px; margin-bottom: 18px; color: white;
+    box-shadow: 0 4px 14px rgba(193,80,46,0.25);
+  }
+  .sidebar-hero h2 { margin: 0; font-size: 17px; }
+  .sidebar-hero p { margin: 6px 0 0 0; font-size: 12px; line-height: 1.4; color: #fff0e8; }
+
+  details.panel {
+    background: #fff; border: 1px solid #e2e4f0; border-radius: 10px;
+    margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  details.panel > summary {
+    cursor: pointer; padding: 10px 12px; font-weight: 600; font-size: 13.5px; color: var(--charcoal);
+    list-style: none;
+  }
+  details.panel > summary::-webkit-details-marker { display: none; }
+  details.panel > summary:before { content: "▸ "; color: var(--terracotta); }
+  details.panel[open] > summary:before { content: "▾ "; }
+  .panel-body { padding: 0 12px 14px 12px; }
+  .panel-body label { display: block; font-size: 12px; color: var(--warmgray); margin: 8px 0 3px; }
+  .panel-body input, .panel-body select {
+    width: 100%; padding: 6px 8px; border: 1px solid #d8d8d8; border-radius: 6px; font-size: 13px;
+  }
+  .panel-body button {
+    margin-top: 12px; width: 100%; padding: 8px; border: none; border-radius: 8px;
+    background: linear-gradient(135deg, var(--terracotta) 0%, var(--amber) 100%);
+    color: white; font-weight: 600; font-size: 13px; cursor: pointer;
+  }
+  .panel-body button:hover { filter: brightness(1.05); }
+  .form-msg { font-size: 12px; margin-top: 6px; }
+  .form-msg.ok { color: #2e7d32; }
+  .form-msg.err { color: #c62828; }
+
+  .sidebar-note {
+    background: #fff8e1; border-left: 3px solid #f9a825; border-radius: 6px;
+    padding: 10px 12px; font-size: 11.5px; color: #5d4037; margin-top: 8px;
+  }
+
+  /* Main content */
+  .main { flex: 1; padding: 28px 32px; max-width: 1400px; }
+  .hero {
+    background: linear-gradient(135deg, var(--charcoal) 0%, #4A4642 100%);
+    padding: 26px 32px; border-radius: 16px; margin-bottom: 22px; color: white;
+    box-shadow: 0 6px 18px rgba(45,45,45,0.25);
+  }
+  .hero h1 { margin: 0; font-size: 26px; }
+  .hero p { margin: 6px 0 0 0; font-size: 14px; color: #E8E4DD; }
+
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+  .tab-btn {
+    padding: 10px 18px; background: none; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: var(--warmgray); border-bottom: 3px solid transparent;
+  }
+  .tab-btn.active { color: var(--terracotta); border-bottom-color: var(--terracotta); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card {
+    background: #fff; border: 1px solid var(--card-border); border-radius: 14px; padding: 16px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .kpi-label { color: #757575; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { color: var(--charcoal); font-size: 27px; font-weight: 700; margin-top: 4px; }
+  .kpi-sub { font-size: 12px; margin-top: 4px; }
+  .kpi-good { color: #2e7d32; } .kpi-warn { color: #ef6c00; } .kpi-bad { color: #c62828; }
+
+  .section-title {
+    color: var(--charcoal); font-size: 17px; font-weight: 700; margin: 18px 0 12px;
+    border-left: 4px solid var(--terracotta); padding-left: 10px;
+  }
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart-box { background: #fff; border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; }
+  th { background: var(--charcoal); color: white; font-size: 11.5px; text-transform: uppercase; }
+  tr:nth-child(even) { background: #FAF6F0; }
+  .filters { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filters select, .filters input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
+  .table-wrap { max-height: 420px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 10px; }
+  .caption { color: var(--warmgray); font-size: 12px; margin-top: 10px; }
+  .subtabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .subtab-btn {
+    padding: 6px 14px; border: 1px solid var(--card-border); background: #fff; border-radius: 18px;
+    cursor: pointer; font-size: 12.5px; color: var(--darktext);
+  }
+  .subtab-btn.active { background: var(--terracotta); color: white; border-color: var(--terracotta); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-hero">
+      <h2>⚙️ Manage WarehouseFlow</h2>
+      <p>Add zones, bins, SKUs, or log a pick task — changes save instantly.</p>
+    </div>
+
+    <details class="panel">
+      <summary>📍 Add New Zone</summary>
+      <div class="panel-body">
+        <label>Zone ID (e.g. Z4)</label><input id="z_id">
+        <label>Zone Name</label><input id="z_name">
+        <label>Description</label><input id="z_desc">
+        <button onclick="addZone()">Add Zone</button>
+        <div class="form-msg" id="z_msg"></div>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>📦 Add New Bin</summary>
+      <div class="panel-body">
+        <label>Bin ID</label><input id="b_id">
+        <label>Rack</label><select id="b_rack"></select>
+        <label>Zone</label><select id="b_zone"></select>
+        <label>Capacity</label><input id="b_cap" type="number" value="50">
+        <label>Distance to Dispatch (m)</label><input id="b_dist" type="number" value="20">
+        <button onclick="addBin()">Add Bin</button>
+        <div class="form-msg" id="b_msg"></div>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>🏷️ Add New SKU</summary>
+      <div class="panel-body">
+        <label>SKU ID</label><input id="s_id">
+        <label>Product Name</label><input id="s_name">
+        <label>Category</label>
+        <select id="s_cat">
+          <option>Apparel</option><option>Footwear</option><option>Accessories</option>
+          <option>Electronics</option><option>Other</option>
+        </select>
+        <label>Unit Cost</label><input id="s_cost" type="number" value="100">
+        <button onclick="addSku()">Add SKU</button>
+        <div class="form-msg" id="s_msg"></div>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>📍 Reassign SKU to a Bin</summary>
+      <div class="panel-body">
+        <label>SKU</label><select id="r_sku"></select>
+        <label>New Bin</label><select id="r_bin"></select>
+        <label>Effective Date</label><input id="r_date" type="date">
+        <button onclick="reassignSku()">Reassign</button>
+        <div class="form-msg" id="r_msg"></div>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>⏱️ Log a Pick Task</summary>
+      <div class="panel-body">
+        <label>SKU</label><select id="p_sku"></select>
+        <label>Bin</label><select id="p_bin"></select>
+        <label>Zone</label><select id="p_zone"></select>
+        <label>Picker ID</label><input id="p_picker" value="P1">
+        <label>Shift</label>
+        <select id="p_shift"><option>Morning</option><option>Afternoon</option><option>Night</option></select>
+        <label>Strategy</label>
+        <select id="p_strategy"><option>Single</option><option>Batch</option><option>Wave</option></select>
+        <label>Travel Distance (m)</label><input id="p_travel" type="number" value="20">
+        <label>Pick Time (seconds)</label><input id="p_time" type="number" value="45">
+        <label><input type="checkbox" id="p_error" style="width:auto;"> Had an error</label>
+        <label>Pick Date</label><input id="p_date" type="date">
+        <button onclick="logPick()">Log Pick</button>
+        <div class="form-msg" id="p_msg"></div>
+      </div>
+    </details>
+
+    <div class="sidebar-note">
+      ⚠️ <b>Note:</b> Slotting recommendations refresh only after you re-run <code>03_slotting_optimization.py</code>.
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="hero">
+      <h1>🏭 WarehouseFlow</h1>
+      <p>Slotting and Picking Efficiency Optimizer • Logistics &amp; Supply Chain Intern Project</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+      <button class="tab-btn" data-tab="slotting">📍 Slotting</button>
+      <button class="tab-btn" data-tab="picking">⏱️ Picking Performance</button>
+      <button class="tab-btn" data-tab="browse">🔍 Browse All Data</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="kpi-row" id="kpi-row"></div>
+      <div class="chart-row">
+        <div class="chart-box"><div class="section-title">Picks by Zone (Congestion)</div><div id="chart-zone"></div></div>
+        <div class="chart-box"><div class="section-title">Strategy Comparison</div><div id="chart-strategy"></div></div>
+      </div>
+      <div class="section-title">Weekly Productivity Trend</div>
+      <div class="chart-box"><div id="chart-weekly"></div></div>
+    </div>
+
+    <!-- SLOTTING -->
+    <div class="tab-panel" id="tab-slotting">
+      <div class="section-title">🏷️ ABC Classification &amp; Relocation Recommendations</div>
+      <div class="filters">
+        <label><input type="checkbox" class="cls-filter" value="A" checked> Class A</label>
+        <label><input type="checkbox" class="cls-filter" value="B" checked> Class B</label>
+        <label><input type="checkbox" class="cls-filter" value="C" checked> Class C</label>
+        <label><input type="checkbox" id="only-moves" checked> Show only SKUs recommended to move</label>
+        <button onclick="loadSlotting()" style="padding:6px 14px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Apply</button>
+      </div>
+      <div class="table-wrap"><table id="slotting-table"></table></div>
+      <div class="caption" id="slotting-caption"></div>
+    </div>
+
+    <!-- PICKING -->
+    <div class="tab-panel" id="tab-picking">
+      <div class="section-title">⏱️ Picking Performance &amp; Bottlenecks</div>
+      <div class="filters">
+        <select id="filter-zone"><option value="All">All Zones</option></select>
+        <select id="filter-shift">
+          <option value="All">All Shifts</option><option>Morning</option><option>Afternoon</option><option>Night</option>
+        </select>
+        <select id="filter-strategy">
+          <option value="All">All Strategies</option><option>Single</option><option>Batch</option><option>Wave</option>
+        </select>
+        <button onclick="loadPicking()" style="padding:6px 14px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Apply</button>
+      </div>
+      <p id="picking-count" style="font-weight:600;"></p>
+      <div class="chart-row">
+        <div>
+          <div class="section-title">Bottleneck by Zone</div>
+          <div class="table-wrap"><table id="zone-bottleneck-table"></table></div>
+        </div>
+        <div>
+          <div class="section-title">Bottleneck by Shift</div>
+          <div class="table-wrap"><table id="shift-bottleneck-table"></table></div>
+        </div>
+      </div>
+      <div class="section-title">Recent Pick Tasks (newest first)</div>
+      <div class="table-wrap"><table id="recent-picks-table"></table></div>
+    </div>
+
+    <!-- BROWSE -->
+    <div class="tab-panel" id="tab-browse">
+      <div class="section-title">🔍 Browse Everything in the Warehouse</div>
+      <div class="subtabs">
+        <button class="subtab-btn active" data-sub="zones">📍 Zones &amp; Racks</button>
+        <button class="subtab-btn" data-sub="bins">📦 Bins</button>
+        <button class="subtab-btn" data-sub="skus">🏷️ SKUs &amp; Assignments</button>
+      </div>
+      <div id="sub-zones">
+        <div class="table-wrap"><table id="zones-table"></table></div>
+        <br>
+        <div class="table-wrap"><table id="racks-table"></table></div>
+      </div>
+      <div id="sub-bins" style="display:none;">
+        <input id="bin-search" placeholder="Search by Bin ID" style="padding:6px 10px;border-radius:6px;border:1px solid #ccc;margin-bottom:10px;">
+        <button onclick="loadBins()" style="padding:6px 14px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Search</button>
+        <div class="table-wrap" style="margin-top:10px;"><table id="bins-table"></table></div>
+      </div>
+      <div id="sub-skus" style="display:none;">
+        <div class="table-wrap"><table id="skus-table"></table></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const CHARCOAL = "#2D2D2D", TERRACOTTA = "#C1502E", AMBER = "#D98E4A", SAGE = "#7A8B6F";
+
+// ---------- Tabs ----------
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "slotting") loadSlotting();
+    if (btn.dataset.tab === "picking") loadPicking();
+    if (btn.dataset.tab === "browse") loadZonesBrowse();
+  });
+});
+document.querySelectorAll(".subtab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".subtab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    ["zones","bins","skus"].forEach(s => document.getElementById("sub-"+s).style.display = "none");
+    document.getElementById("sub-" + btn.dataset.sub).style.display = "block";
+    if (btn.dataset.sub === "bins") loadBins();
+    if (btn.dataset.sub === "skus") loadSkusBrowse();
+  });
+});
+
+// ---------- Helpers ----------
+function kpiCard(label, value, sub, cls) {
+  return `<div class="kpi-card"><div class="kpi-label">${label}</div>
+    <div class="kpi-value">${value}</div><div class="kpi-sub ${cls}">${sub}</div></div>`;
+}
+function renderTable(el, rows, columns) {
+  if (!rows || rows.length === 0) { el.innerHTML = "<tr><td>No data yet.</td></tr>"; return; }
+  let html = "<tr>" + columns.map(c => `<th>${c.label}</th>`).join("") + "</tr>";
+  rows.forEach(r => {
+    html += "<tr>" + columns.map(c => `<td>${r[c.key] ?? ""}</td>`).join("") + "</tr>";
+  });
+  el.innerHTML = html;
+}
+
+// ---------- Overview ----------
+async function loadOverview() {
+  const res = await fetch("/api/overview");
+  const d = await res.json();
+
+  const errCls = d.error_rate < 3 ? "kpi-good" : (d.error_rate < 6 ? "kpi-warn" : "kpi-bad");
+  const relCls = d.n_relocate > 0 ? "kpi-warn" : "kpi-good";
+  document.getElementById("kpi-row").innerHTML =
+    kpiCard("Picks / Hour", d.picks_per_hour, d.total_picks + " picks logged", "kpi-good") +
+    kpiCard("Error Rate", d.error_rate + "%", "of all pick tasks", errCls) +
+    kpiCard("Avg Travel / Pick", d.avg_travel + " m", "across all zones", "kpi-good") +
+    kpiCard("Relocations Recommended", d.n_relocate, "~" + d.total_savings + " m/day savings", relCls);
+
+  Plotly.newPlot("chart-zone", [{
+    x: d.zone_counts.map(z => z.zone_name || z.zone_id), y: d.zone_counts.map(z => z.picks),
+    type: "bar", marker: { color: TERRACOTTA }
+  }], { margin: {t:10,b:40,l:40,r:10}, height: 320, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)" }, {displayModeBar:false});
+
+  Plotly.newPlot("chart-strategy", [{
+    x: d.strategy_summary.map(s => s.strategy), y: d.strategy_summary.map(s => s.avg_time),
+    type: "bar", marker: { color: [TERRACOTTA, AMBER, SAGE] }
+  }], { margin: {t:10,b:40,l:40,r:10}, height: 320, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)" }, {displayModeBar:false});
+
+  Plotly.newPlot("chart-weekly", [{
+    x: d.weekly.map(w => "Week " + w.week), y: d.weekly.map(w => w.picks),
+    type: "scatter", mode: "lines+markers", line: { color: TERRACOTTA, width: 3 }
+  }], { margin: {t:10,b:40,l:40,r:10}, height: 280, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)" }, {displayModeBar:false});
+}
+
+// ---------- Slotting ----------
+async function loadSlotting() {
+  const classes = Array.from(document.querySelectorAll(".cls-filter:checked")).map(c => c.value);
+  const onlyMoves = document.getElementById("only-moves").checked;
+  const params = new URLSearchParams();
+  classes.forEach(c => params.append("class", c));
+  params.append("only_moves", onlyMoves);
+  const res = await fetch("/api/slotting?" + params.toString());
+  const rows = await res.json();
+  renderTable(document.getElementById("slotting-table"), rows, [
+    {key:"sku_id", label:"SKU"}, {key:"abc_class", label:"Class"}, {key:"pick_frequency_30d", label:"Picks (30d)"},
+    {key:"current_bin_id", label:"Current Bin"}, {key:"recommended_bin_id", label:"Recommended Bin"},
+    {key:"current_distance_m", label:"Current Dist (m)"}, {key:"recommended_distance_m", label:"New Dist (m)"},
+    {key:"estimated_daily_savings_m", label:"Est. Daily Savings (m)"}
+  ]);
+  const total = rows.reduce((a,r) => a + (r.estimated_daily_savings_m || 0), 0);
+  document.getElementById("slotting-caption").innerText =
+    `Showing ${rows.length} SKUs. Total estimated daily savings across shown SKUs: ${total.toFixed(1)} m.`;
+}
+
+// ---------- Picking ----------
+async function loadPicking() {
+  const zone = document.getElementById("filter-zone").value;
+  const shift = document.getElementById("filter-shift").value;
+  const strategy = document.getElementById("filter-strategy").value;
+  const res = await fetch(`/api/picking?zone=${zone}&shift=${shift}&strategy=${strategy}`);
+  const d = await res.json();
+  document.getElementById("picking-count").innerText = `${d.total_matching} pick tasks match your filters`;
+  renderTable(document.getElementById("zone-bottleneck-table"), d.zone_bottleneck, [
+    {key:"zone_id", label:"Zone"}, {key:"avg_time", label:"Avg Pick Time (s)"}, {key:"picks", label:"Total Picks"}
+  ]);
+  renderTable(document.getElementById("shift-bottleneck-table"), d.shift_bottleneck, [
+    {key:"shift", label:"Shift"}, {key:"avg_time", label:"Avg Pick Time (s)"}, {key:"picks", label:"Total Picks"}
+  ]);
+  renderTable(document.getElementById("recent-picks-table"), d.recent, [
+    {key:"task_id", label:"ID"}, {key:"sku_id", label:"SKU"}, {key:"bin_id", label:"Bin"}, {key:"zone_id", label:"Zone"},
+    {key:"picker_id", label:"Picker"}, {key:"pick_date", label:"Date"}, {key:"shift", label:"Shift"},
+    {key:"strategy", label:"Strategy"}, {key:"travel_distance_m", label:"Travel (m)"},
+    {key:"pick_time_seconds", label:"Time (s)"}, {key:"had_error", label:"Error"}
+  ]);
+}
+
+// ---------- Browse ----------
+async function loadZonesBrowse() {
+  const res = await fetch("/api/browse/zones");
+  const d = await res.json();
+  renderTable(document.getElementById("zones-table"), d.zones, [
+    {key:"zone_id", label:"Zone ID"}, {key:"zone_name", label:"Name"}, {key:"description", label:"Description"}
+  ]);
+  renderTable(document.getElementById("racks-table"), d.racks, [
+    {key:"rack_id", label:"Rack ID"}, {key:"zone_id", label:"Zone"}, {key:"rack_name", label:"Name"}
+  ]);
+}
+async function loadBins() {
+  const search = document.getElementById("bin-search").value;
+  const res = await fetch("/api/browse/bins?search=" + encodeURIComponent(search));
+  const rows = await res.json();
+  renderTable(document.getElementById("bins-table"), rows, [
+    {key:"bin_id", label:"Bin ID"}, {key:"rack_id", label:"Rack"}, {key:"zone_id", label:"Zone"},
+    {key:"capacity", label:"Capacity"}, {key:"distance_to_dispatch_m", label:"Distance (m)"}
+  ]);
+}
+async function loadSkusBrowse() {
+  const res = await fetch("/api/browse/skus");
+  const rows = await res.json();
+  renderTable(document.getElementById("skus-table"), rows, [
+    {key:"sku_id", label:"SKU"}, {key:"product_name", label:"Product"}, {key:"category", label:"Category"},
+    {key:"bin_id", label:"Current Bin"}, {key:"zone_id", label:"Zone"},
+    {key:"distance_to_dispatch_m", label:"Distance (m)"}, {key:"assigned_date", label:"Since"}
+  ]);
+}
+
+// ---------- Dropdown population ----------
+async function populateDropdowns() {
+  const res = await fetch("/api/dropdowns");
+  const d = await res.json();
+  const fill = (id, list) => {
+    const el = document.getElementById(id);
+    el.innerHTML = list.map(v => `<option value="${v}">${v}</option>`).join("");
+  };
+  fill("b_rack", d.racks); fill("b_zone", d.zones);
+  fill("r_sku", d.skus); fill("r_bin", d.bins);
+  fill("p_sku", d.skus); fill("p_bin", d.bins); fill("p_zone", d.zones);
+  const zoneFilter = document.getElementById("filter-zone");
+  d.zones.forEach(z => { const o = document.createElement("option"); o.value = z; o.text = z; zoneFilter.appendChild(o); });
+}
+
+// ---------- Form submissions ----------
+async function postJson(url, body) {
+  const res = await fetch(url, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
+  return { ok: res.ok, data: await res.json() };
+}
+async function addZone() {
+  const r = await postJson("/api/add_zone", { zone_id: document.getElementById("z_id").value, zone_name: document.getElementById("z_name").value, description: document.getElementById("z_desc").value });
+  showMsg("z_msg", r);
+  if (r.ok) { populateDropdowns(); }
+}
+async function addBin() {
+  const r = await postJson("/api/add_bin", {
+    bin_id: document.getElementById("b_id").value, rack_id: document.getElementById("b_rack").value,
+    zone_id: document.getElementById("b_zone").value, capacity: document.getElementById("b_cap").value,
+    distance: document.getElementById("b_dist").value
+  });
+  showMsg("b_msg", r);
+  if (r.ok) populateDropdowns();
+}
+async function addSku() {
+  const r = await postJson("/api/add_sku", {
+    sku_id: document.getElementById("s_id").value, product_name: document.getElementById("s_name").value,
+    category: document.getElementById("s_cat").value, unit_cost: document.getElementById("s_cost").value
+  });
+  showMsg("s_msg", r);
+  if (r.ok) populateDropdowns();
+}
+async function reassignSku() {
+  const r = await postJson("/api/reassign_sku", {
+    sku_id: document.getElementById("r_sku").value, bin_id: document.getElementById("r_bin").value,
+    date: document.getElementById("r_date").value
+  });
+  showMsg("r_msg", r);
+}
+async function logPick() {
+  const r = await postJson("/api/log_pick", {
+    sku_id: document.getElementById("p_sku").value, bin_id: document.getElementById("p_bin").value,
+    zone_id: document.getElementById("p_zone").value, picker_id: document.getElementById("p_picker").value,
+    shift: document.getElementById("p_shift").value, strategy: document.getElementById("p_strategy").value,
+    travel: document.getElementById("p_travel").value, time: document.getElementById("p_time").value,
+    had_error: document.getElementById("p_error").checked, date: document.getElementById("p_date").value
+  });
+  showMsg("p_msg", r);
+  if (r.ok) loadOverview();
+}
+function showMsg(id, r) {
+  const el = document.getElementById(id);
+  if (r.ok) { el.className = "form-msg ok"; el.innerText = "Saved."; }
+  else { el.className = "form-msg err"; el.innerText = r.data.error || "Something went wrong."; }
+}
+
+// ---------- Init ----------
+loadOverview();
+populateDropdowns();
+</script>
+</body>
+</html>
