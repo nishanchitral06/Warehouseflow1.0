@@ -223,27 +223,10 @@ The app automatically detects and switches to Turso when these are present.
 
 ---
 
-## 🌐 Deployment
-
-The app is deployed on **[Render](https://render.com)** using the included `Procfile`:
-
-```
-web: gunicorn app:app --bind 0.0.0.0:$PORT
-```
-
-To deploy your own instance:
-1. Fork the [repository](https://github.com/nishanchitral06/Warehouseflow1.0)
-2. Connect to Render and create a new **Web Service**
-3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `gunicorn app:app`
-5. *(Optional)* Add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as environment variables
-
----
-
 ## 👤 Author
 
-|**Nishan C**|
-|Logistics & Supply Chain Intern|
+**Nishan C**
+Logistics & Supply Chain Intern
 
 ---
 
