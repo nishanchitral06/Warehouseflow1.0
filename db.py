@@ -49,7 +49,13 @@ class DBConnection:
 
         if self.mode == "turso":
             import libsql_client
-            self.client = libsql_client.create_client_sync(url=url, auth_token=token)
+            # Turso's regional hostnames (e.g. aws-ap-south-1.turso.io) can
+            # reject the WebSocket/Hrana handshake used by the default
+            # libsql:// scheme (WSServerHandshakeError: 400). Using the
+            # plain HTTPS scheme instead connects over regular HTTP calls
+            # and avoids that bug entirely - same database, same data.
+            https_url = url.replace("libsql://", "https://")
+            self.client = libsql_client.create_client_sync(url=https_url, auth_token=token)
         else:
             import sqlite3
             self.conn = sqlite3.connect("warehouseflow.db")
