@@ -1,81 +1,261 @@
-# WarehouseFlow — Slotting and Picking Efficiency Optimizer
-## (Flask version — no Streamlit — built for Render)
+<p align="center">
+  <img src="https://img.shields.io/badge/WarehouseFlow-1.0-C1502E?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwIDhIMTBsLTIgNC0yLTRINCI+PC9wYXRoPjwvc3ZnPg==&logoColor=white" alt="WarehouseFlow Badge"/>
+</p>
 
-Logistics & Supply Chain Internship Project (Persevex)
+<h1 align="center">📦 WarehouseFlow 1.0</h1>
 
-## What This Is
-A plain Flask web app (HTML/CSS/JS frontend + JSON API backend) that maps
-a warehouse (zones, racks, bins), classifies products by pick frequency
-(ABC analysis), recommends moving fast-moving products closer to dispatch,
-and tracks picking performance across shifts, zones, and picking
-strategies (Single / Batch / Wave). No Streamlit dependency anywhere.
+<p align="center">
+  <b>Smart Warehouse Slotting & Picking Optimization Dashboard</b>
+</p>
 
-## Project Structure
-| File | Purpose |
-|---|---|
-| `app.py` | Flask app — serves the dashboard page and all JSON API endpoints |
-| `templates/index.html` | The entire frontend — tabs, sidebar forms, charts (Plotly.js via CDN), tables |
-| `db.py` | Database layer — auto-switches between Turso (cloud) and local SQLite |
-| `01_create_schema.py` | Creates the database schema |
-| `02_generate_sample_data.py` | Generates zones, racks, bins, SKUs, 30 days of pick logs |
-| `03_slotting_optimization.py` | ABC classification + relocation recommendations |
-| `04_picking_workflow_analysis.py` | Prints a strategy/bottleneck summary (optional, for sanity-checking data) |
-| `06_migrate_to_turso.py` | One-time script to migrate local data to Turso |
-| `warehouseflow.db` | Local database snapshot (for offline/local runs) |
-| `requirements.txt` | Flask, gunicorn, pandas, numpy, libsql-client — no Streamlit |
-| `Procfile` | Tells Render how to start the app (`gunicorn app:app`) |
+<p align="center">
+  <a href="https://warehouseflow1-0.onrender.com"><img src="https://img.shields.io/badge/🌐_Live_Demo-warehouseflow1--0.onrender.com-2D9CDB?style=for-the-badge" alt="Live Demo"/></a>
+  &nbsp;
+  <a href="https://github.com/nishanchitral06/Warehouseflow1.0"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repo"/></a>
+</p>
 
-## How to Run Locally
-```bash
-pip install -r requirements.txt
-python app.py
-```
-Then open http://localhost:5000 in your browser. Runs against the included
-local `warehouseflow.db` by default.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Flask-2.x-000000?style=flat-square&logo=flask&logoColor=white"/>
+  <img src="https://img.shields.io/badge/SQLite-Turso-003B57?style=flat-square&logo=sqlite&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Pandas-Data_Engine-150458?style=flat-square&logo=pandas&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Plotly-Charts-3F4F75?style=flat-square&logo=plotly&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Deployed_on-Render-46E3B7?style=flat-square&logo=render&logoColor=white"/>
+</p>
 
 ---
 
-## Deploying to Render (with Turso for persistent storage)
+## 🔗 Quick Links
 
-### Step 1 — Push this whole folder to GitHub
-Create a new repo and upload every file here, including the `templates`
-folder with `index.html` inside it (folder structure must be preserved —
-Flask looks for `templates/index.html` specifically).
+| Resource | URL |
+|----------|-----|
+| **🌐 Live Demo** | [warehouseflow1-0.onrender.com](https://warehouseflow1-0.onrender.com) |
+| **📂 GitHub Repo** | [github.com/nishanchitral06/Warehouseflow1.0](https://github.com/nishanchitral06/Warehouseflow1.0) |
 
-### Step 2 — Create a Turso database
-1. Sign up free at https://turso.tech
-2. Create a new database (closest region to you)
-3. Create a Database Token: **Expires: Never**, **Authorization: Read & Write**
-4. Copy your Database URL (`libsql://...`) and the token somewhere safe
+---
 
-### Step 3 — Migrate your local data to Turso
-On your machine, in this folder:
-```bash
-pip install libsql-client
-set TURSO_DATABASE_URL=libsql://your-db-url-here
-set TURSO_AUTH_TOKEN=your-token-here
-python 06_migrate_to_turso.py
+## 📖 About
+
+**WarehouseFlow** is a full-stack warehouse management dashboard that optimizes product slotting and picking workflows. It uses **ABC analysis** (Pareto classification) to recommend optimal bin placements for high-frequency SKUs, reducing travel distance and improving pick-rate efficiency.
+
+Built with a Flask REST API backend and a single-page interactive dashboard frontend using Plotly.js for rich data visualizations — all deployable to the cloud with zero configuration.
+
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 📊 **Operations Dashboard** | Real-time KPIs — picks/hour, error rate, avg travel distance, weekly trends |
+| 🧮 **ABC Slotting Optimization** | Pareto-based classification (A/B/C) with smart bin relocation recommendations |
+| 🔍 **Picking Workflow Analysis** | Filter by zone, shift, and strategy; identify bottlenecks instantly |
+| 🗂️ **Data Browser** | Explore zones, racks, bins, and SKU assignments interactively |
+| ➕ **CRUD Operations** | Add/delete zones, bins, SKUs; reassign SKUs to bins; log picks — all from the UI |
+| 🌙 **Dark / Light Mode** | Elegant theme toggle with smooth transitions |
+| ☁️ **Dual Database Support** | Seamless switching between local SQLite and Turso cloud DB |
+
+---
+
+## 🏗️ Tech Stack
+
+```
+Frontend     →  HTML5 · CSS3 (custom properties) · Vanilla JS · Plotly.js
+Backend      →  Python · Flask · Gunicorn
+Data Layer   →  Pandas · NumPy
+Database     →  SQLite (local) / Turso (cloud, libsql-client)
+Deployment   →  Render (PaaS)
 ```
 
-### Step 4 — Deploy on Render
-1. Go to https://render.com → sign in with GitHub
-2. **New +** → **Web Service** → select your repo
-3. Settings:
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `gunicorn app:app --bind 0.0.0.0:$PORT`
-   - **Instance Type:** Free
-4. Environment Variables:
-   - `TURSO_DATABASE_URL` = your Turso URL
-   - `TURSO_AUTH_TOKEN` = your Turso token
-5. Click **Create Web Service**
+---
 
-Your live app will be at `https://<your-service-name>.onrender.com`. Since
-it's backed by Turso instead of a local file, every SKU, bin, or pick task
-added through the dashboard persists permanently — across restarts and
-redeploys.
+## 📁 Project Structure
 
-## Note on Render's Free Tier
-Render's free web services sleep after ~15 minutes of no traffic, and wake
-automatically on the next visit (unlike Streamlit Cloud, a simple uptime
-ping actually works here to keep it awake, since Render treats any HTTP
-request as real traffic).
+```
+WarehouseFlow1.0/
+├── app.py                         # Flask web server & REST API
+├── db.py                          # Database abstraction (SQLite ↔ Turso)
+├── index.html                     # Single-page dashboard (template)
+├── requirements.txt               # Python dependencies
+├── Procfile                       # Render deployment config
+├── warehouseflow.db               # Local SQLite database (sample data)
+├── 01_create_schema.py            # Database schema setup script
+├── 02_generate_sample_data.py     # Sample data generator
+├── 03_slotting_optimization.py    # ABC analysis & slotting engine
+├── 04_picking_workflow_analysis.py# Picking workflow analysis script
+└── 06_migrate_to_turso.py         # Migration script: SQLite → Turso
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.10+
+- pip
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/nishanchitral06/Warehouseflow1.0.git
+cd Warehouseflow1.0
+
+# 2. Create a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate        # Linux / macOS
+venv\Scripts\activate           # Windows
+
+# 3. Install dependencies
+pip install -r requirements.txt
+```
+
+### Run Locally
+
+```bash
+python app.py
+```
+
+Open your browser at **http://localhost:5000** — the dashboard loads instantly.
+
+### Set Up the Database (Optional)
+
+If you want to start fresh or regenerate sample data:
+
+```bash
+python 01_create_schema.py           # Create tables
+python 02_generate_sample_data.py    # Generate sample data
+python 03_slotting_optimization.py   # Run ABC slotting optimization
+```
+
+### Cloud Database (Turso)
+
+To use Turso instead of local SQLite, set these environment variables:
+
+```bash
+export TURSO_DATABASE_URL="libsql://your-db.turso.io"
+export TURSO_AUTH_TOKEN="your-auth-token"
+```
+
+The app automatically detects and switches to Turso when these are present.
+
+---
+
+## 🔌 API Reference
+
+### Read Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/overview` | Dashboard KPIs, zone distribution, weekly trends |
+| `GET` | `/api/slotting` | Slotting recommendations (filterable by ABC class) |
+| `GET` | `/api/picking` | Picking task analysis (filterable by zone/shift/strategy) |
+| `GET` | `/api/browse/zones` | List all zones and racks |
+| `GET` | `/api/browse/bins` | List all bins (searchable) |
+| `GET` | `/api/browse/skus` | List all SKUs with current assignments |
+| `GET` | `/api/dropdowns` | Dropdown values for forms |
+
+### Write Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/add_zone` | Create a new zone |
+| `POST` | `/api/add_bin` | Create a new bin |
+| `POST` | `/api/add_sku` | Create a new SKU |
+| `POST` | `/api/reassign_sku` | Reassign a SKU to a different bin |
+| `POST` | `/api/log_pick` | Log a pick task |
+| `POST` | `/api/delete_bin` | Delete a bin and its references |
+| `POST` | `/api/delete_sku` | Delete a SKU and its references |
+
+---
+
+## 🗄️ Database Schema
+
+```
+┌──────────────────────┐     ┌──────────────────────┐
+│        Zone          │     │        Rack          │
+├──────────────────────┤     ├──────────────────────┤
+│ zone_id    (PK)      │◄────│ zone_id    (FK)      │
+│ zone_name            │     │ rack_id    (PK)      │
+│ description          │     │ rack_name            │
+└──────────────────────┘     └──────────────────────┘
+         │                            │
+         ▼                            ▼
+┌──────────────────────────────────────────────┐
+│                    Bin                       │
+├──────────────────────────────────────────────┤
+│ bin_id  (PK) │ rack_id (FK) │ zone_id (FK)  │
+│ bin_code     │ capacity     │ distance_to_  │
+│              │              │ dispatch_m    │
+└──────────────────────────────────────────────┘
+         │                          │
+         ▼                          ▼
+┌────────────────────┐   ┌─────────────────────────┐
+│       SKU          │   │   SKUBinAssignment      │
+├────────────────────┤   ├─────────────────────────┤
+│ sku_id     (PK)    │◄──│ sku_id    (FK)          │
+│ product_name       │   │ bin_id    (FK)          │
+│ category           │   │ assigned_date           │
+│ unit_cost          │   └─────────────────────────┘
+└────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────┐
+│              PickTaskLog                     │
+├──────────────────────────────────────────────┤
+│ task_id (PK) │ sku_id    │ bin_id   │ zone_id│
+│ picker_id    │ pick_date │ shift    │strategy│
+│ travel_distance_m  │ pick_time_seconds      │
+│ had_error                                    │
+└──────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│         SlottingRecommendation               │
+├──────────────────────────────────────────────┤
+│ sku_id │ current_bin_id │ recommended_bin_id │
+│ abc_class  │ pick_frequency_30d              │
+│ current_distance_m │ recommended_distance_m  │
+│ estimated_daily_savings_m                    │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+## 🧠 How Slotting Optimization Works
+
+1. **Pick Frequency Calculation** — Counts picks per SKU over the last 30 days
+2. **ABC Classification** — Top 20% by frequency → **A**, next 30% → **B**, bottom 50% → **C**
+3. **Bin Matching** — A-class SKUs are matched to the closest-to-dispatch bins
+4. **Savings Estimation** — `(current_distance - recommended_distance) × daily_picks`
+5. **Recommendations** — Results are saved and displayed on the dashboard with estimated daily travel savings in meters
+
+---
+
+## 🌐 Deployment
+
+The app is deployed on **[Render](https://render.com)** using the included `Procfile`:
+
+```
+web: gunicorn app:app --bind 0.0.0.0:$PORT
+```
+
+To deploy your own instance:
+1. Fork the [repository](https://github.com/nishanchitral06/Warehouseflow1.0)
+2. Connect to Render and create a new **Web Service**
+3. Set build command: `pip install -r requirements.txt`
+4. Set start command: `gunicorn app:app`
+5. *(Optional)* Add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as environment variables
+
+---
+
+## 👤 Author
+
+**Nishan C**
+Logistics & Supply Chain Intern — Persevex
+
+---
+
+## 📜 License
+
+This project was developed as part of a minor project submission for the Logistics & Supply Chain Internship at Persevex. All rights reserved.
+</p>
