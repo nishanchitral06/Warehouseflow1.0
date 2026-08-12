@@ -264,6 +264,48 @@ def log_pick():
     return jsonify({"ok": True})
 
 
+@app.route("/api/delete_bin", methods=["POST"])
+def delete_bin():
+    data = request.json
+    bin_id = data.get("bin_id")
+    if not bin_id:
+        return jsonify({"ok": False, "error": "Bin ID is required."}), 400
+    conn = get_conn()
+    try:
+        # Clean up rows that reference this bin so the dashboard doesn't
+        # break on dangling foreign keys, then remove the bin itself.
+        conn.execute("DELETE FROM SKUBinAssignment WHERE bin_id = ?", (bin_id,))
+        conn.execute("DELETE FROM PickTaskLog WHERE bin_id = ?", (bin_id,))
+        conn.execute("DELETE FROM SlottingRecommendation WHERE current_bin_id = ? OR recommended_bin_id = ?", (bin_id, bin_id))
+        conn.execute("DELETE FROM Bin WHERE bin_id = ?", (bin_id,))
+        conn.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    finally:
+        conn.close()
+
+
+@app.route("/api/delete_sku", methods=["POST"])
+def delete_sku():
+    data = request.json
+    sku_id = data.get("sku_id")
+    if not sku_id:
+        return jsonify({"ok": False, "error": "SKU ID is required."}), 400
+    conn = get_conn()
+    try:
+        conn.execute("DELETE FROM SKUBinAssignment WHERE sku_id = ?", (sku_id,))
+        conn.execute("DELETE FROM PickTaskLog WHERE sku_id = ?", (sku_id,))
+        conn.execute("DELETE FROM SlottingRecommendation WHERE sku_id = ?", (sku_id,))
+        conn.execute("DELETE FROM SKU WHERE sku_id = ?", (sku_id,))
+        conn.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    finally:
+        conn.close()
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
