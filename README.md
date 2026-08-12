@@ -251,7 +251,7 @@ To deploy your own instance:
 ## 👤 Author
 
 **Nishan C**
-Logistics & Supply Chain Intern — Persevex
+Logistics & Supply Chain Intern
 
 ---
 
