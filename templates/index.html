@@ -15,83 +15,42 @@
     --darktext: #3A3633;
     --cream: #FAF7F2;
     --card-border: #E5E0D8;
-
-    --bg: #ffffff;
-    --surface: #ffffff;
-    --surface-2: #FAF6F0;
-    --text: var(--darktext);
-    --text-dim: var(--warmgray);
-    --sidebar-start: #f5f6fb;
-    --sidebar-end: #eef0fa;
-    --sidebar-border: #e0e0e0;
-    --th-bg: var(--charcoal);
-    --th-text: #ffffff;
-    --shadow: rgba(0,0,0,0.06);
-    --glow: rgba(193,80,46,0.25);
-    --input-bg: #ffffff;
-    --input-border: #d8d8d8;
-    --footer-bg: #211f1c;
-    --footer-text: #d8d3cb;
-  }
-  [data-theme="dark"] {
-    --bg: #0B0D10;
-    --surface: #15181d;
-    --surface-2: #1a1d23;
-    --text: #E8E6E1;
-    --text-dim: #9AA0A6;
-    --card-border: #272b33;
-    --sidebar-start: #13151a;
-    --sidebar-end: #0d0f13;
-    --sidebar-border: #23262d;
-    --th-bg: #1c2028;
-    --th-text: #E8E6E1;
-    --shadow: rgba(0,0,0,0.55);
-    --glow: rgba(217,142,74,0.35);
-    --input-bg: #12151a;
-    --input-border: #2c313a;
-    --footer-bg: #0a0b0d;
-    --footer-text: #a9a49c;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
+    margin: 0; background: #ffffff; color: var(--darktext);
     font-family: -apple-system, "Segoe UI", Arial, sans-serif;
-    transition: background 0.25s ease, color 0.25s ease;
   }
   .layout { display: flex; min-height: 100vh; }
 
   /* Sidebar */
   .sidebar {
-    width: 300px; flex-shrink: 0; background: linear-gradient(180deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
-    border-right: 1px solid var(--sidebar-border); padding: 20px 16px; overflow-y: auto;
-    transition: background 0.25s ease, border-color 0.25s ease;
+    width: 300px; flex-shrink: 0; background: linear-gradient(180deg, #f5f6fb 0%, #eef0fa 100%);
+    border-right: 1px solid #e0e0e0; padding: 20px 16px; overflow-y: auto;
   }
   .sidebar-hero {
     background: linear-gradient(135deg, var(--terracotta) 0%, var(--amber) 100%);
     border-radius: 12px; padding: 16px; margin-bottom: 18px; color: white;
-    box-shadow: 0 4px 14px var(--glow);
+    box-shadow: 0 4px 14px rgba(193,80,46,0.25);
   }
   .sidebar-hero h2 { margin: 0; font-size: 17px; }
   .sidebar-hero p { margin: 6px 0 0 0; font-size: 12px; line-height: 1.4; color: #fff0e8; }
 
   details.panel {
-    background: var(--surface); border: 1px solid var(--card-border); border-radius: 10px;
-    margin-bottom: 10px; box-shadow: 0 1px 4px var(--shadow);
-    transition: background 0.25s ease, border-color 0.25s ease;
+    background: #fff; border: 1px solid #e2e4f0; border-radius: 10px;
+    margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   details.panel > summary {
-    cursor: pointer; padding: 10px 12px; font-weight: 600; font-size: 13.5px; color: var(--text);
+    cursor: pointer; padding: 10px 12px; font-weight: 600; font-size: 13.5px; color: var(--charcoal);
     list-style: none;
   }
   details.panel > summary::-webkit-details-marker { display: none; }
   details.panel > summary:before { content: "▸ "; color: var(--terracotta); }
   details.panel[open] > summary:before { content: "▾ "; }
   .panel-body { padding: 0 12px 14px 12px; }
-  .panel-body label { display: block; font-size: 12px; color: var(--text-dim); margin: 8px 0 3px; }
+  .panel-body label { display: block; font-size: 12px; color: var(--warmgray); margin: 8px 0 3px; }
   .panel-body input, .panel-body select {
-    width: 100%; padding: 6px 8px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 13px;
-    background: var(--input-bg); color: var(--text);
+    width: 100%; padding: 6px 8px; border: 1px solid #d8d8d8; border-radius: 6px; font-size: 13px;
   }
   .panel-body button {
     margin-top: 12px; width: 100%; padding: 8px; border: none; border-radius: 8px;
@@ -100,43 +59,28 @@
   }
   .panel-body button:hover { filter: brightness(1.05); }
   .form-msg { font-size: 12px; margin-top: 6px; }
-  .form-msg.ok { color: #4caf50; }
-  .form-msg.err { color: #ef5350; }
+  .form-msg.ok { color: #2e7d32; }
+  .form-msg.err { color: #c62828; }
 
   .sidebar-note {
     background: #fff8e1; border-left: 3px solid #f9a825; border-radius: 6px;
     padding: 10px 12px; font-size: 11.5px; color: #5d4037; margin-top: 8px;
   }
-  [data-theme="dark"] .sidebar-note { background: #241f10; color: #f0d999; border-left-color: #c99a2e; }
 
   /* Main content */
   .main { flex: 1; padding: 28px 32px; max-width: 1400px; }
   .hero {
-    position: relative; overflow: hidden;
     background: linear-gradient(135deg, var(--charcoal) 0%, #4A4642 100%);
     padding: 26px 32px; border-radius: 16px; margin-bottom: 22px; color: white;
     box-shadow: 0 6px 18px rgba(45,45,45,0.25);
   }
-  [data-theme="dark"] .hero { background: linear-gradient(135deg, #14161a 0%, #23262d 100%); box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
-  .hero:before {
-    content: ""; position: absolute; inset: 0;
-    background: radial-gradient(circle at 85% -20%, rgba(217,142,74,0.35), transparent 55%);
-    pointer-events: none;
-  }
-  .hero h1 { margin: 0; font-size: 26px; position: relative; }
-  .hero p { margin: 6px 0 0 0; font-size: 14px; color: #E8E4DD; position: relative; }
-  .hero-live {
-    position: absolute; top: 22px; right: 28px; display: flex; align-items: center; gap: 6px;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 11px; letter-spacing: 0.6px; color: #B9F6CA; background: rgba(0,0,0,0.25);
-    padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(185,246,202,0.25);
-  }
-  .hero-live .dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf50; animation: pulse 1.8s infinite; }
+  .hero h1 { margin: 0; font-size: 26px; }
+  .hero p { margin: 6px 0 0 0; font-size: 14px; color: #E8E4DD; }
 
-  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--card-border); margin-bottom: 20px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid #eee; margin-bottom: 20px; }
   .tab-btn {
     padding: 10px 18px; background: none; border: none; cursor: pointer;
-    font-size: 14px; font-weight: 600; color: var(--text-dim); border-bottom: 3px solid transparent;
+    font-size: 14px; font-weight: 600; color: var(--warmgray); border-bottom: 3px solid transparent;
   }
   .tab-btn.active { color: var(--terracotta); border-bottom-color: var(--terracotta); }
   .tab-panel { display: none; }
@@ -144,132 +88,101 @@
 
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
   .kpi-card {
-    background: var(--surface); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px 18px;
-    box-shadow: 0 2px 8px var(--shadow); transition: background 0.25s ease, border-color 0.25s ease, transform 0.15s ease;
+    background: #fff; border: 1px solid var(--card-border); border-radius: 14px; padding: 16px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   }
-  .kpi-card:hover { transform: translateY(-2px); }
-  .kpi-label { color: var(--text-dim); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-  .kpi-value {
-    color: var(--text); font-size: 27px; font-weight: 700; margin-top: 4px;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  }
+  .kpi-label { color: #757575; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { color: var(--charcoal); font-size: 27px; font-weight: 700; margin-top: 4px; }
   .kpi-sub { font-size: 12px; margin-top: 4px; }
-  .kpi-good { color: #43a047; } .kpi-warn { color: #ef6c00; } .kpi-bad { color: #e53935; }
+  .kpi-good { color: #2e7d32; } .kpi-warn { color: #ef6c00; } .kpi-bad { color: #c62828; }
 
   .section-title {
-    color: var(--text); font-size: 17px; font-weight: 700; margin: 18px 0 12px;
+    color: var(--charcoal); font-size: 17px; font-weight: 700; margin: 18px 0 12px;
     border-left: 4px solid var(--terracotta); padding-left: 10px;
   }
   .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .chart-box { background: var(--surface); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; transition: background 0.25s ease, border-color 0.25s ease; }
+  .chart-box { background: #fff; border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--surface); color: var(--text); }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--card-border); }
-  th { background: var(--th-bg); color: var(--th-text); font-size: 11.5px; text-transform: uppercase; }
-  tr:nth-child(even) { background: var(--surface-2); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; }
+  th { background: var(--charcoal); color: white; font-size: 11.5px; text-transform: uppercase; }
+  tr:nth-child(even) { background: #FAF6F0; }
   .filters { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-  .filters select, .filters input { padding: 6px 10px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 13px; background: var(--input-bg); color: var(--text); }
+  .filters select, .filters input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
   .table-wrap { max-height: 420px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 10px; }
-  .caption { color: var(--text-dim); font-size: 12px; margin-top: 10px; }
+  .caption { color: var(--warmgray); font-size: 12px; margin-top: 10px; }
   .subtabs { display: flex; gap: 6px; margin-bottom: 14px; }
   .subtab-btn {
-    padding: 6px 14px; border: 1px solid var(--card-border); background: var(--surface); border-radius: 18px;
-    cursor: pointer; font-size: 12.5px; color: var(--text);
+    padding: 6px 14px; border: 1px solid var(--card-border); background: #fff; border-radius: 18px;
+    cursor: pointer; font-size: 12.5px; color: var(--darktext);
   }
   .subtab-btn.active { background: var(--terracotta); color: white; border-color: var(--terracotta); }
 
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(76,175,80,0.55); }
-    70% { box-shadow: 0 0 0 6px rgba(76,175,80,0); }
-    100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+  .contact-bar {
+    display: flex; justify-content: flex-end; gap: 20px; font-size: 12.5px;
+    color: var(--warmgray); margin-bottom: 8px;
   }
+  .contact-bar a { color: var(--warmgray); text-decoration: none; }
+  .contact-bar a:hover { color: var(--terracotta); }
 
-  /* Floating draggable control bar */
-  .float-bar {
-    position: fixed; top: 18px; right: 18px; z-index: 500;
-    display: flex; align-items: center; gap: 10px;
-    background: rgba(30,32,36,0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 30px;
-    padding: 7px 10px 7px 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-    color: #fff; font-size: 12px; user-select: none;
-  }
-  .float-bar .drag-handle {
-    cursor: grab; padding: 2px 6px; color: #cfd3d8; font-size: 14px; letter-spacing: -1px;
-  }
-  .float-bar .drag-handle:active { cursor: grabbing; }
-  .float-bar .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4caf50; animation: pulse 1.8s infinite; }
-  .float-bar .status-text { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; color: #d7f5da; white-space: nowrap; }
-  .float-bar select.theme-select {
-    border: none; border-radius: 14px; padding: 4px 8px; cursor: pointer;
-    background: rgba(255,255,255,0.14); color: #fff; font-size: 11.5px; outline: none;
-  }
-  .float-bar select.theme-select option { color: #222; }
-
-  /* Footer */
+  .legal-panel { margin-top: 14px; }
+  .legal-panel .panel-body ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--darktext); line-height: 1.6; }
   .site-footer {
-    background: var(--footer-bg); color: var(--footer-text); padding: 40px 32px 0; margin-top: 10px;
-  }
-  .footer-grid {
-    max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 28px;
-    padding-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-  .footer-col .footer-logo { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-  .footer-col p { font-size: 12.5px; line-height: 1.6; margin: 4px 0; }
-  .footer-col h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: #fff; margin: 0 0 10px; }
-  .footer-col a {
-    display: block; font-size: 12.5px; color: var(--footer-text); text-decoration: none; margin-bottom: 8px; cursor: pointer;
-  }
-  .footer-col a:hover { color: var(--amber); }
-  .footer-bottom {
-    max-width: 1400px; margin: 0 auto; padding: 16px 0 20px; font-size: 11.5px; color: #8a857c;
-    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--card-border);
+    font-size: 12px; color: var(--warmgray);
   }
 
-  /* Modals */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000;
-    align-items: center; justify-content: center; padding: 20px;
+  .delete-btn {
+    background: #c62828; color: white; border: none; border-radius: 6px; padding: 4px 10px;
+    font-size: 11.5px; cursor: pointer; white-space: nowrap;
   }
-  .modal-overlay.open { display: flex; }
-  .modal-box {
-    background: var(--surface); color: var(--text); max-width: 520px; width: 100%; border-radius: 14px;
-    padding: 26px 28px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    border: 1px solid var(--card-border);
-  }
-  .modal-box h3 { margin-top: 0; }
-  .modal-box p { font-size: 13.5px; line-height: 1.7; color: var(--text-dim); }
-  .modal-close {
-    position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 20px;
-    cursor: pointer; color: var(--text-dim);
-  }
+  .delete-btn:hover { background: #a02020; }
 
-  @media (max-width: 1000px) {
-    .footer-grid { grid-template-columns: 1fr 1fr; }
-  }
+  .table-wrap { overflow-x: auto; }
+
+  /* ---------- Mobile toggle (hidden on desktop) ---------- */
+  .mobile-toggle { display: none; }
+
+  /* ---------- Responsive breakpoints ---------- */
   @media (max-width: 900px) {
-    .footer-grid { grid-template-columns: 1fr; }
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .layout { flex-direction: column; }
+    .mobile-toggle {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px 16px; background: linear-gradient(135deg, var(--terracotta) 0%, var(--amber) 100%);
+      color: white; border: none; font-weight: 600; font-size: 14.5px; cursor: pointer;
+    }
+    .sidebar {
+      width: 100%; border-right: none; border-bottom: 1px solid #e0e0e0;
+      max-height: 0; overflow: hidden; padding: 0 16px; transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    .sidebar.open { max-height: 3000px; padding: 20px 16px; }
+    .main { padding: 16px; max-width: 100%; }
+    .hero { padding: 18px 20px; }
+    .hero h1 { font-size: 21px; }
+    .hero p { font-size: 13px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .chart-row { grid-template-columns: 1fr; }
+    .tabs { flex-wrap: wrap; }
+    .contact-bar { justify-content: flex-start; flex-wrap: wrap; gap: 12px; }
+    .filters { flex-direction: column; align-items: stretch; }
+  }
+  @media (max-width: 480px) {
+    .kpi-row { grid-template-columns: 1fr; }
+    .kpi-value { font-size: 22px; }
+    .hero h1 { font-size: 19px; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 8px; }
   }
 </style>
 </head>
 <body>
-
-<!-- Floating draggable status bar -->
-<div class="float-bar" id="floatBar">
-  <span class="drag-handle" id="dragHandle" title="Drag to move">⠿⠿</span>
-  <span class="status-dot"></span>
-  <span class="status-text" id="statusText">Live</span>
-  <select class="theme-select" id="themeSelect" title="Choose display mode">
-    <option value="light">☀️ Light</option>
-    <option value="dark">🌙 Dark</option>
-  </select>
-</div>
-
 <div class="layout">
 
+  <!-- Mobile-only toggle for the Add Zone/Bin/SKU sidebar -->
+  <button class="mobile-toggle" onclick="toggleSidebar()">☰ Manage WarehouseFlow (Add / Edit)</button>
+
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-hero">
       <h2>⚙️ Manage WarehouseFlow</h2>
       <p>Add zones, bins, SKUs, or log a pick task — changes save instantly.</p>
@@ -353,10 +266,13 @@
 
   <!-- MAIN -->
   <div class="main">
+    <div class="contact-bar">
+      <span>📧 nishanchitral@gmail.com</span>
+      <a href="https://www.linkedin.com/in/YOUR-LINKEDIN-HANDLE" target="_blank">🔗 LinkedIn</a>
+    </div>
     <div class="hero">
-      <div class="hero-live"><span class="dot"></span> SYSTEM LIVE</div>
       <h1>🏭 WarehouseFlow</h1>
-      <p>Slotting and Picking Efficiency Optimizer • Logistics &amp; Supply Chain Intern Project</p>
+      <p>Slotting and Picking Efficiency Optimizer • Logistics &amp; Supply Chain Intern Project — built by Nishan C</p>
     </div>
 
     <div class="tabs">
@@ -385,7 +301,7 @@
         <label><input type="checkbox" class="cls-filter" value="B" checked> Class B</label>
         <label><input type="checkbox" class="cls-filter" value="C" checked> Class C</label>
         <label><input type="checkbox" id="only-moves" checked> Show only SKUs recommended to move</label>
-        <button onclick="loadSlotting()" style="padding:6px 14px;border-radius:6px;border:1px solid var(--card-border);cursor:pointer;background:var(--surface);color:var(--text);">Apply</button>
+        <button onclick="loadSlotting()" style="padding:6px 14px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Apply</button>
       </div>
       <div class="table-wrap"><table id="slotting-table"></table></div>
       <div class="caption" id="slotting-caption"></div>
@@ -402,7 +318,7 @@
         <select id="filter-strategy">
           <option value="All">All Strategies</option><option>Single</option><option>Batch</option><option>Wave</option>
         </select>
-        <button onclick="loadPicking()" style="padding:6px 14px;border-radius:6px;border:1px solid var(--card-border);cursor:pointer;background:var(--surface);color:var(--text);">Apply</button>
+        <button onclick="loadPicking()" style="padding:6px 14px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Apply</button>
       </div>
       <p id="picking-count" style="font-weight:600;"></p>
       <div class="chart-row">
@@ -433,142 +349,47 @@
         <div class="table-wrap"><table id="racks-table"></table></div>
       </div>
       <div id="sub-bins" style="display:none;">
-        <input id="bin-search" placeholder="Search by Bin ID" style="padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);margin-bottom:10px;background:var(--input-bg);color:var(--text);">
-        <button onclick="loadBins()" style="padding:6px 14px;border-radius:6px;border:1px solid var(--card-border);cursor:pointer;background:var(--surface);color:var(--text);">Search</button>
-        <span style="display:inline-block;width:14px;"></span>
-        <input id="bin-delete-id" placeholder="Bin ID to delete" style="padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);">
-        <button onclick="deleteBin()" style="padding:6px 14px;border-radius:6px;border:1px solid #e53935;cursor:pointer;background:#e53935;color:#fff;">🗑️ Delete Bin</button>
-        <span class="form-msg" id="bin-delete-msg"></span>
+        <input id="bin-search" placeholder="Search by Bin ID" style="padding:6px 10px;border-radius:6px;border:1px solid #ccc;margin-bottom:10px;">
+        <button onclick="loadBins()" style="padding:6px 14px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Search</button>
         <div class="table-wrap" style="margin-top:10px;"><table id="bins-table"></table></div>
       </div>
       <div id="sub-skus" style="display:none;">
-        <input id="sku-delete-id" placeholder="SKU ID to delete" style="padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);margin-bottom:10px;background:var(--input-bg);color:var(--text);">
-        <button onclick="deleteSku()" style="padding:6px 14px;border-radius:6px;border:1px solid #e53935;cursor:pointer;background:#e53935;color:#fff;">🗑️ Delete SKU</button>
-        <span class="form-msg" id="sku-delete-msg"></span>
-        <div class="table-wrap" style="margin-top:10px;"><table id="skus-table"></table></div>
+        <div class="table-wrap"><table id="skus-table"></table></div>
       </div>
     </div>
 
-  </div>
-</div>
+    <!-- PRIVACY & TERMS -->
+    <details class="panel legal-panel">
+      <summary>🔒 Privacy Policy</summary>
+      <div class="panel-body">
+        <ul>
+          <li>This dashboard is a student internship project built for demonstration purposes only.</li>
+          <li>All warehouse layout, SKU, slotting, and picking data shown here is <strong>simulated</strong> — no real customer, vendor, or business data is used or collected.</li>
+          <li>Any records you add through the sidebar forms are stored in this app's own database (Turso/SQLite) solely to power the demo, and are not shared with or sold to third parties.</li>
+          <li>No personal data about visitors (location, device, browsing activity) is collected or tracked by this app.</li>
+        </ul>
+      </div>
+    </details>
 
-<!-- FOOTER -->
-<footer class="site-footer">
-  <div class="footer-grid">
-    <div class="footer-col">
-      <div class="footer-logo">🏭 WarehouseFlow</div>
-      <p>A slotting and picking-efficiency optimizer built for a Logistics &amp; Supply Chain internship project — mapping a warehouse layout, classifying SKUs by pick frequency, and tracking picking performance across shifts and strategies.</p>
-    </div>
-    <div class="footer-col">
-      <h4>Project</h4>
-      <p><b>Prepared by:</b> Nishan</p>
-      <p>Industrial Engineering &amp; Management student</p>
-      <p>Logistics &amp; Supply Chain Internship</p>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <a href="mailto:nishanchitral@gmail.com" target="_blank" rel="noopener">✉️ Gmail</a>
-      <a href="https://www.linkedin.com/in/nishan-c-807b2a36b" target="_blank" rel="noopener">🔗 LinkedIn</a>
-    </div>
-    <div class="footer-col">
-      <h4>Legal</h4>
-      <a onclick="openModal('privacyModal')">Data &amp; Privacy Notice</a>
-      <a onclick="openModal('termsModal')">Terms &amp; Conditions</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 WarehouseFlow. Academic project — not for commercial or production use.</span>
-  </div>
-</footer>
+    <details class="panel legal-panel">
+      <summary>📄 Terms &amp; Conditions</summary>
+      <div class="panel-body">
+        <ul>
+          <li>This application is provided <strong>as-is</strong>, for educational and portfolio purposes, with no warranty of accuracy, uptime, or fitness for production/commercial use.</li>
+          <li>The slotting recommendations, picking benchmarks, and KPIs shown are generated from simulated data and should not be used for real warehouse operations decisions.</li>
+          <li>You're welcome to explore and interact with the demo (add zones, bins, SKUs, log picks, etc.) — data entered may be reset periodically as part of ongoing development.</li>
+          <li>For questions, feedback, or collaboration inquiries, reach out via the contact links above.</li>
+        </ul>
+      </div>
+    </details>
 
-<!-- MODALS -->
-<div class="modal-overlay" id="privacyModal" onclick="if(event.target===this) closeModal('privacyModal')">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('privacyModal')">×</button>
-    <h3>Data &amp; Privacy Notice</h3>
-    <p>Every zone, rack, bin, SKU, picker ID, and pick task log shown in this dashboard is <b>synthetically generated</b> for this academic project. No real employee, customer, vendor, or company data is used, stored, or displayed anywhere in this system.</p>
-    <p>Data entered through the sidebar forms (new zones, bins, SKUs, pick logs) is stored in a cloud database associated with this project and is used only to demonstrate the dashboard's functionality.</p>
-  </div>
-</div>
-<div class="modal-overlay" id="termsModal" onclick="if(event.target===this) closeModal('termsModal')">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('termsModal')">×</button>
-    <h3>Terms &amp; Conditions</h3>
-    <p>WarehouseFlow is an academic/internship project built for demonstration purposes. It is not a production warehouse-management system and should not be used to make real operational or business decisions.</p>
-    <p>Data may be reset, modified, or removed at any time without notice. The dashboard is provided as-is, with no warranty of accuracy, uptime, or fitness for a particular purpose.</p>
+    <div class="site-footer">© 2026 Nishan C · WarehouseFlow</div>
+
   </div>
 </div>
 
 <script>
 const CHARCOAL = "#2D2D2D", TERRACOTTA = "#C1502E", AMBER = "#D98E4A", SAGE = "#7A8B6F";
-
-// ---------- Theme ----------
-function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  document.getElementById("themeSelect").value = theme;
-  localStorage.setItem("wf_theme", theme);
-  loadOverview(); // redraw charts with theme-correct colors
-}
-(function initTheme() {
-  const saved = localStorage.getItem("wf_theme");
-  applyTheme(saved === "dark" ? "dark" : "light");
-})();
-document.getElementById("themeSelect").addEventListener("change", e => applyTheme(e.target.value));
-
-function plotlyFontColor() {
-  return getComputedStyle(document.documentElement).getPropertyValue("--text").trim() || "#3A3633";
-}
-function plotlyGridColor() {
-  return getComputedStyle(document.documentElement).getPropertyValue("--card-border").trim() || "#E5E0D8";
-}
-
-// ---------- Draggable floating status bar ----------
-(function makeDraggable() {
-  const bar = document.getElementById("floatBar");
-  const handle = document.getElementById("dragHandle");
-  let dragging = false, offsetX = 0, offsetY = 0;
-
-  const saved = JSON.parse(localStorage.getItem("wf_bar_pos") || "null");
-  if (saved) {
-    bar.style.left = saved.left + "px"; bar.style.top = saved.top + "px";
-    bar.style.right = "auto";
-  }
-
-  function start(clientX, clientY) {
-    dragging = true;
-    const rect = bar.getBoundingClientRect();
-    offsetX = clientX - rect.left; offsetY = clientY - rect.top;
-    bar.style.right = "auto";
-  }
-  function move(clientX, clientY) {
-    if (!dragging) return;
-    let left = clientX - offsetX, top = clientY - offsetY;
-    left = Math.max(4, Math.min(window.innerWidth - bar.offsetWidth - 4, left));
-    top = Math.max(4, Math.min(window.innerHeight - bar.offsetHeight - 4, top));
-    bar.style.left = left + "px"; bar.style.top = top + "px";
-  }
-  function end() {
-    if (!dragging) return;
-    dragging = false;
-    const rect = bar.getBoundingClientRect();
-    localStorage.setItem("wf_bar_pos", JSON.stringify({ left: rect.left, top: rect.top }));
-  }
-
-  handle.addEventListener("mousedown", e => start(e.clientX, e.clientY));
-  window.addEventListener("mousemove", e => move(e.clientX, e.clientY));
-  window.addEventListener("mouseup", end);
-
-  handle.addEventListener("touchstart", e => { const t = e.touches[0]; start(t.clientX, t.clientY); }, {passive:true});
-  window.addEventListener("touchmove", e => { const t = e.touches[0]; move(t.clientX, t.clientY); }, {passive:true});
-  window.addEventListener("touchend", end);
-})();
-
-// ---------- Modals ----------
-function openModal(id) { document.getElementById(id).classList.add("open"); }
-function closeModal(id) { document.getElementById(id).classList.remove("open"); }
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") document.querySelectorAll(".modal-overlay.open").forEach(m => m.classList.remove("open"));
-});
 
 // ---------- Tabs ----------
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -598,217 +419,15 @@ function kpiCard(label, value, sub, cls) {
   return `<div class="kpi-card"><div class="kpi-label">${label}</div>
     <div class="kpi-value">${value}</div><div class="kpi-sub ${cls}">${sub}</div></div>`;
 }
-function renderTable(el, rows, columns) {
+function renderTable(el, rows, columns, actions) {
   if (!rows || rows.length === 0) { el.innerHTML = "<tr><td>No data yet.</td></tr>"; return; }
-  let html = "<tr>" + columns.map(c => `<th>${c.label}</th>`).join("") + "</tr>";
+  let html = "<tr>" + columns.map(c => `<th>${c.label}</th>`).join("") + (actions ? "<th>Actions</th>" : "") + "</tr>";
   rows.forEach(r => {
-    html += "<tr>" + columns.map(c => `<td>${r[c.key] ?? ""}</td>`).join("") + "</tr>";
+    html += "<tr>" + columns.map(c => `<td>${r[c.key] ?? ""}</td>`).join("");
+    if (actions) {
+      const id = r[actions.idKey];
+      html += `<td><button class="delete-btn" onclick="${actions.fn}('${id}')">🗑 Delete</button></td>`;
+    }
+    html += "</tr>";
   });
-  el.innerHTML = html;
-}
-
-// ---------- Overview ----------
-async function loadOverview() {
-  const res = await fetch("/api/overview");
-  const d = await res.json();
-
-  const errCls = d.error_rate < 3 ? "kpi-good" : (d.error_rate < 6 ? "kpi-warn" : "kpi-bad");
-  const relCls = d.n_relocate > 0 ? "kpi-warn" : "kpi-good";
-  document.getElementById("kpi-row").innerHTML =
-    kpiCard("Picks / Hour", d.picks_per_hour, d.total_picks + " picks logged", "kpi-good") +
-    kpiCard("Error Rate", d.error_rate + "%", "of all pick tasks", errCls) +
-    kpiCard("Avg Travel / Pick", d.avg_travel + " m", "across all zones", "kpi-good") +
-    kpiCard("Relocations Recommended", d.n_relocate, "~" + d.total_savings + " m/day savings", relCls);
-
-  const fontColor = plotlyFontColor(), gridColor = plotlyGridColor();
-  const baseLayout = {
-    margin: {t:10,b:40,l:40,r:10}, height: 320, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
-    font: { color: fontColor }, xaxis: { gridcolor: gridColor, color: fontColor }, yaxis: { gridcolor: gridColor, color: fontColor }
-  };
-
-  Plotly.newPlot("chart-zone", [{
-    x: d.zone_counts.map(z => z.zone_name || z.zone_id), y: d.zone_counts.map(z => z.picks),
-    type: "bar", marker: { color: TERRACOTTA }
-  }], baseLayout, {displayModeBar:false});
-
-  Plotly.newPlot("chart-strategy", [{
-    x: d.strategy_summary.map(s => s.strategy), y: d.strategy_summary.map(s => s.avg_time),
-    type: "bar", marker: { color: [TERRACOTTA, AMBER, SAGE] }
-  }], baseLayout, {displayModeBar:false});
-
-  Plotly.newPlot("chart-weekly", [{
-    x: d.weekly.map(w => "Week " + w.week), y: d.weekly.map(w => w.picks),
-    type: "scatter", mode: "lines+markers", line: { color: TERRACOTTA, width: 3 }
-  }], { ...baseLayout, height: 280 }, {displayModeBar:false});
-}
-
-// ---------- Slotting ----------
-async function loadSlotting() {
-  const classes = Array.from(document.querySelectorAll(".cls-filter:checked")).map(c => c.value);
-  const onlyMoves = document.getElementById("only-moves").checked;
-  const params = new URLSearchParams();
-  classes.forEach(c => params.append("class", c));
-  params.append("only_moves", onlyMoves);
-  const res = await fetch("/api/slotting?" + params.toString());
-  const rows = await res.json();
-  renderTable(document.getElementById("slotting-table"), rows, [
-    {key:"sku_id", label:"SKU"}, {key:"abc_class", label:"Class"}, {key:"pick_frequency_30d", label:"Picks (30d)"},
-    {key:"current_bin_id", label:"Current Bin"}, {key:"recommended_bin_id", label:"Recommended Bin"},
-    {key:"current_distance_m", label:"Current Dist (m)"}, {key:"recommended_distance_m", label:"New Dist (m)"},
-    {key:"estimated_daily_savings_m", label:"Est. Daily Savings (m)"}
-  ]);
-  const total = rows.reduce((a,r) => a + (r.estimated_daily_savings_m || 0), 0);
-  document.getElementById("slotting-caption").innerText =
-    `Showing ${rows.length} SKUs. Total estimated daily savings across shown SKUs: ${total.toFixed(1)} m.`;
-}
-
-// ---------- Picking ----------
-async function loadPicking() {
-  const zone = document.getElementById("filter-zone").value;
-  const shift = document.getElementById("filter-shift").value;
-  const strategy = document.getElementById("filter-strategy").value;
-  const res = await fetch(`/api/picking?zone=${zone}&shift=${shift}&strategy=${strategy}`);
-  const d = await res.json();
-  document.getElementById("picking-count").innerText = `${d.total_matching} pick tasks match your filters`;
-  renderTable(document.getElementById("zone-bottleneck-table"), d.zone_bottleneck, [
-    {key:"zone_id", label:"Zone"}, {key:"avg_time", label:"Avg Pick Time (s)"}, {key:"picks", label:"Total Picks"}
-  ]);
-  renderTable(document.getElementById("shift-bottleneck-table"), d.shift_bottleneck, [
-    {key:"shift", label:"Shift"}, {key:"avg_time", label:"Avg Pick Time (s)"}, {key:"picks", label:"Total Picks"}
-  ]);
-  renderTable(document.getElementById("recent-picks-table"), d.recent, [
-    {key:"task_id", label:"ID"}, {key:"sku_id", label:"SKU"}, {key:"bin_id", label:"Bin"}, {key:"zone_id", label:"Zone"},
-    {key:"picker_id", label:"Picker"}, {key:"pick_date", label:"Date"}, {key:"shift", label:"Shift"},
-    {key:"strategy", label:"Strategy"}, {key:"travel_distance_m", label:"Travel (m)"},
-    {key:"pick_time_seconds", label:"Time (s)"}, {key:"had_error", label:"Error"}
-  ]);
-}
-
-// ---------- Browse ----------
-async function loadZonesBrowse() {
-  const res = await fetch("/api/browse/zones");
-  const d = await res.json();
-  renderTable(document.getElementById("zones-table"), d.zones, [
-    {key:"zone_id", label:"Zone ID"}, {key:"zone_name", label:"Name"}, {key:"description", label:"Description"}
-  ]);
-  renderTable(document.getElementById("racks-table"), d.racks, [
-    {key:"rack_id", label:"Rack ID"}, {key:"zone_id", label:"Zone"}, {key:"rack_name", label:"Name"}
-  ]);
-}
-async function loadBins() {
-  const search = document.getElementById("bin-search").value;
-  const res = await fetch("/api/browse/bins?search=" + encodeURIComponent(search));
-  const rows = await res.json();
-  renderTable(document.getElementById("bins-table"), rows, [
-    {key:"bin_id", label:"Bin ID"}, {key:"rack_id", label:"Rack"}, {key:"zone_id", label:"Zone"},
-    {key:"capacity", label:"Capacity"}, {key:"distance_to_dispatch_m", label:"Distance (m)"}
-  ]);
-}
-async function loadSkusBrowse() {
-  const res = await fetch("/api/browse/skus");
-  const rows = await res.json();
-  renderTable(document.getElementById("skus-table"), rows, [
-    {key:"sku_id", label:"SKU"}, {key:"product_name", label:"Product"}, {key:"category", label:"Category"},
-    {key:"bin_id", label:"Current Bin"}, {key:"zone_id", label:"Zone"},
-    {key:"distance_to_dispatch_m", label:"Distance (m)"}, {key:"assigned_date", label:"Since"}
-  ]);
-}
-
-// ---------- Dropdown population ----------
-async function populateDropdowns() {
-  const res = await fetch("/api/dropdowns");
-  const d = await res.json();
-  const fill = (id, list) => {
-    const el = document.getElementById(id);
-    el.innerHTML = list.map(v => `<option value="${v}">${v}</option>`).join("");
-  };
-  fill("b_rack", d.racks); fill("b_zone", d.zones);
-  fill("r_sku", d.skus); fill("r_bin", d.bins);
-  fill("p_sku", d.skus); fill("p_bin", d.bins); fill("p_zone", d.zones);
-  const zoneFilter = document.getElementById("filter-zone");
-  d.zones.forEach(z => { const o = document.createElement("option"); o.value = z; o.text = z; zoneFilter.appendChild(o); });
-}
-
-// ---------- Form submissions ----------
-async function postJson(url, body) {
-  const res = await fetch(url, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
-  return { ok: res.ok, data: await res.json() };
-}
-async function addZone() {
-  const r = await postJson("/api/add_zone", { zone_id: document.getElementById("z_id").value, zone_name: document.getElementById("z_name").value, description: document.getElementById("z_desc").value });
-  showMsg("z_msg", r);
-  if (r.ok) { populateDropdowns(); }
-}
-async function addBin() {
-  const r = await postJson("/api/add_bin", {
-    bin_id: document.getElementById("b_id").value, rack_id: document.getElementById("b_rack").value,
-    zone_id: document.getElementById("b_zone").value, capacity: document.getElementById("b_cap").value,
-    distance: document.getElementById("b_dist").value
-  });
-  showMsg("b_msg", r);
-  if (r.ok) populateDropdowns();
-}
-async function addSku() {
-  const r = await postJson("/api/add_sku", {
-    sku_id: document.getElementById("s_id").value, product_name: document.getElementById("s_name").value,
-    category: document.getElementById("s_cat").value, unit_cost: document.getElementById("s_cost").value
-  });
-  showMsg("s_msg", r);
-  if (r.ok) populateDropdowns();
-}
-async function deleteBin() {
-  const binId = document.getElementById("bin-delete-id").value.trim();
-  const el = document.getElementById("bin-delete-msg");
-  if (!binId) { el.className = "form-msg err"; el.innerText = "Enter a Bin ID."; return; }
-  const r = await postJson("/api/delete_bin", { bin_id: binId });
-  if (r.ok) {
-    el.className = "form-msg ok"; el.innerText = "Deleted.";
-    document.getElementById("bin-delete-id").value = "";
-    loadBins(); populateDropdowns(); loadOverview();
-  } else {
-    el.className = "form-msg err"; el.innerText = r.data.error || "Could not delete.";
-  }
-}
-async function deleteSku() {
-  const skuId = document.getElementById("sku-delete-id").value.trim();
-  const el = document.getElementById("sku-delete-msg");
-  if (!skuId) { el.className = "form-msg err"; el.innerText = "Enter a SKU ID."; return; }
-  const r = await postJson("/api/delete_sku", { sku_id: skuId });
-  if (r.ok) {
-    el.className = "form-msg ok"; el.innerText = "Deleted.";
-    document.getElementById("sku-delete-id").value = "";
-    loadSkusBrowse(); populateDropdowns(); loadOverview();
-  } else {
-    el.className = "form-msg err"; el.innerText = r.data.error || "Could not delete.";
-  }
-}
-async function reassignSku() {
-  const r = await postJson("/api/reassign_sku", {
-    sku_id: document.getElementById("r_sku").value, bin_id: document.getElementById("r_bin").value,
-    date: document.getElementById("r_date").value
-  });
-  showMsg("r_msg", r);
-}
-async function logPick() {
-  const r = await postJson("/api/log_pick", {
-    sku_id: document.getElementById("p_sku").value, bin_id: document.getElementById("p_bin").value,
-    zone_id: document.getElementById("p_zone").value, picker_id: document.getElementById("p_picker").value,
-    shift: document.getElementById("p_shift").value, strategy: document.getElementById("p_strategy").value,
-    travel: document.getElementById("p_travel").value, time: document.getElementById("p_time").value,
-    had_error: document.getElementById("p_error").checked, date: document.getElementById("p_date").value
-  });
-  showMsg("p_msg", r);
-  if (r.ok) loadOverview();
-}
-function showMsg(id, r) {
-  const el = document.getElementById(id);
-  if (r.ok) { el.className = "form-msg ok"; el.innerText = "Saved."; }
-  else { el.className = "form-msg err"; el.innerText = r.data.error || "Something went wrong."; }
-}
-
-// ---------- Init ----------
-loadOverview();
-populateDropdowns();
-</script>
-</body>
-</html>
+  el.inn
