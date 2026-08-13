@@ -127,8 +127,12 @@
   /* Main content */
   body { overflow-x: hidden; }
   .main { flex: 1; padding: 28px 32px; max-width: 1400px; width: 100%; box-sizing: border-box; transition: margin-left 0.3s ease, width 0.3s ease; }
+  .site-footer { transition: margin-left 0.3s ease, width 0.3s ease; }
   @media (min-width: 901px) {
-    .main.shifted { margin-left: 300px; width: calc(100% - 300px); }
+    body.sidebar-open .main,
+    body.sidebar-open .site-footer {
+      margin-left: 300px; width: calc(100% - 300px); box-sizing: border-box;
+    }
   }
   .hero {
     position: relative; overflow: hidden;
@@ -860,13 +864,13 @@ function openSidebar() {
   if (window.innerWidth <= 900) {
     document.getElementById("sidebarBackdrop").classList.add("show");
   } else {
-    document.querySelector(".main").classList.add("shifted");
+    document.body.classList.add("sidebar-open");
   }
 }
 function closeSidebar() {
   document.getElementById("sidebarEl").classList.remove("open");
   document.getElementById("sidebarBackdrop").classList.remove("show");
-  document.querySelector(".main").classList.remove("shifted");
+  document.body.classList.remove("sidebar-open");
 }
 function toggleSidebar() {
   const isOpen = document.getElementById("sidebarEl").classList.contains("open");
