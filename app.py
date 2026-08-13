@@ -264,27 +264,6 @@ def log_pick():
     return jsonify({"ok": True})
 
 
-@app.route("/api/delete_zone", methods=["POST"])
-def delete_zone():
-    data = request.json
-    zone_id = data.get("zone_id")
-    if not zone_id:
-        return jsonify({"ok": False, "error": "Zone ID is required."}), 400
-    conn = get_conn()
-    try:
-        # Block deleting a zone that still has bins in it, same guard style as delete_bin
-        bins_df = conn.read_df("SELECT * FROM Bin")
-        if not bins_df.empty and (bins_df["zone_id"] == zone_id).any():
-            return jsonify({"ok": False, "error": "Cannot delete a zone that still has bins. Delete its bins first."}), 400
-        conn.execute("DELETE FROM Zone WHERE zone_id = ?", (zone_id,))
-        conn.commit()
-        return jsonify({"ok": True})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
-    finally:
-        conn.close()
-
-
 @app.route("/api/delete_bin", methods=["POST"])
 def delete_bin():
     data = request.json
