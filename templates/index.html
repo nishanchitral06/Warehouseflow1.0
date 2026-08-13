@@ -125,9 +125,10 @@
   [data-theme="dark"] .sidebar-note { background: #241f10; color: #f0d999; border-left-color: #c99a2e; }
 
   /* Main content */
-  .main { flex: 1; padding: 28px 32px; max-width: 1400px; transition: margin-left 0.3s ease; }
+  body { overflow-x: hidden; }
+  .main { flex: 1; padding: 28px 32px; max-width: 1400px; width: 100%; box-sizing: border-box; transition: margin-left 0.3s ease, width 0.3s ease; }
   @media (min-width: 901px) {
-    .main.shifted { margin-left: 300px; }
+    .main.shifted { margin-left: 300px; width: calc(100% - 300px); }
   }
   .hero {
     position: relative; overflow: hidden;
