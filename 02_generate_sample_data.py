@@ -1,136 +1,163 @@
 """
-WarehouseFlow - Sample Data Generator
-Creates a warehouse layout (zones, racks, bins), SKUs, current bin
-assignments, and 30 days of simulated pick task logs.
+WarehouseFlow — Sample Data Generator
+Regenerates/expands dummy data for zones, racks, bins, SKUs, and pick tasks.
+
+Run: python 02_generate_sample_data.py
+Requires: 01_create_schema.py to have been run first (creates warehouseflow.db)
 """
+
+import sqlite3
 import random
-import numpy as np
-from datetime import datetime, timedelta
-from db import get_conn
+from datetime import date, timedelta
 
-random.seed(11)
-np.random.seed(11)
+DB_PATH = "warehouseflow.db"
+random.seed(42)
 
-conn = get_conn()
+# ---------- Config (tweak these to scale the dataset up/down) ----------
+N_ZONES = 6
+RACKS_PER_ZONE = 5
+BINS_PER_RACK = 6
+N_SKUS = 200
+N_PICK_TASKS = 12000
+PICK_HISTORY_DAYS = 90
 
-# ---------- Zones ----------
-zones = [
-    ("Z1", "Fast-Pick Zone (near dispatch)", "Closest zone to packing/dispatch"),
-    ("Z2", "Bulk Storage Zone", "Mid-distance general storage"),
-    ("Z3", "Reserve Zone", "Furthest zone, overflow/reserve stock"),
-]
-for z in zones:
-    conn.execute("INSERT INTO Zone (zone_id, zone_name, description) VALUES (?,?,?)", z)
+CATEGORIES = ["Apparel", "Footwear", "Accessories", "Electronics", "Other"]
+SHIFTS = ["Morning", "Afternoon", "Night"]
+STRATEGIES = ["Single", "Batch", "Wave"]
+PICKERS = [f"P{i}" for i in range(1, 13)]
 
-# ---------- Racks (3 per zone) ----------
-racks = []
-for zone_id, base_dist in [("Z1", 10), ("Z2", 40), ("Z3", 80)]:
-    for r in range(1, 4):
-        rack_id = f"{zone_id}-R{r}"
-        racks.append((rack_id, zone_id, f"Rack {r} ({zone_id})"))
-for r in racks:
-    conn.execute("INSERT INTO Rack (rack_id, zone_id, rack_name) VALUES (?,?,?)", r)
+PRODUCT_ADJ = ["Classic", "Premium", "Everyday", "Pro", "Compact", "Urban", "Essential", "Deluxe"]
+PRODUCT_NOUN = {
+    "Apparel": ["Tee", "Hoodie", "Jacket", "Joggers", "Cap"],
+    "Footwear": ["Sneaker", "Sandal", "Boot", "Running Shoe", "Loafer"],
+    "Accessories": ["Backpack", "Belt", "Wallet", "Sunglasses", "Watch"],
+    "Electronics": ["Earbuds", "Charger", "Power Bank", "Cable", "Speaker"],
+    "Other": ["Water Bottle", "Notebook", "Tote Bag", "Mug", "Organizer"],
+}
 
-# ---------- Bins (4 per rack) ----------
-bins_ = []
-zone_base_distance = {"Z1": 10, "Z2": 40, "Z3": 80}
-for rack_id, zone_id, _ in racks:
-    base = zone_base_distance[zone_id]
-    for b in range(1, 5):
-        bin_id = f"{rack_id}-B{b}"
-        bin_code = f"{rack_id}-B{b}"
-        distance = base + random.uniform(0, 15) + (b * 1.5)
-        bins_.append((bin_id, rack_id, zone_id, bin_code, 50, round(distance, 1)))
-for b in bins_:
-    conn.execute(
-        "INSERT INTO Bin (bin_id, rack_id, zone_id, bin_code, capacity, distance_to_dispatch_m) VALUES (?,?,?,?,?,?)",
-        b
+
+def rand_date(days_back):
+    return date.today() - timedelta(days=random.randint(0, days_back))
+
+
+def main():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    # Clear existing rows so this script can be re-run to "regenerate" data
+    for table in ["pick_tasks", "skus", "bins", "racks", "zones"]:
+        cur.execute(f"DELETE FROM {table}")
+
+    # ---------- Zones ----------
+    zones = []
+    zone_words = ["Receiving", "Fast-Pick", "Bulk Storage", "Returns"]
+    for i in range(1, N_ZONES + 1):
+        zone_id = f"Z{i}"
+        name = zone_words[(i - 1) % len(zone_words)]
+        desc = f"{name} area, level {((i-1) % 2) + 1}"
+        zones.append((zone_id, name, desc))
+    cur.executemany("INSERT INTO zones (zone_id, zone_name, description) VALUES (?, ?, ?)", zones)
+
+    # ---------- Racks ----------
+    racks = []
+    for zone_id, zone_name, _ in zones:
+        for r in range(1, RACKS_PER_ZONE + 1):
+            rack_id = f"{zone_id}-R{r}"
+            racks.append((rack_id, zone_id, f"{zone_name} Rack {r}"))
+    cur.executemany("INSERT INTO racks (rack_id, zone_id, rack_name) VALUES (?, ?, ?)", racks)
+
+    # ---------- Bins ----------
+    bins_ = []
+    for rack_id, zone_id, _ in racks:
+        base_dist = random.randint(5, 60)
+        for b in range(1, BINS_PER_RACK + 1):
+            bin_id = f"{rack_id}-B{b}"
+            capacity = random.choice([30, 50, 75, 100])
+            distance = base_dist + random.randint(-3, 3)
+            bins_.append((bin_id, rack_id, zone_id, capacity, max(distance, 2)))
+    cur.executemany(
+        "INSERT INTO bins (bin_id, rack_id, zone_id, capacity, distance_to_dispatch_m) VALUES (?, ?, ?, ?, ?)",
+        bins_,
     )
 
-# ---------- SKUs ----------
-categories = ["Apparel", "Footwear", "Accessories", "Electronics"]
-skus = []
-for i in range(1, 31):
-    sku_id = f"SKU{i:03d}"
-    name = f"Product {i}"
-    category = random.choice(categories)
-    unit_cost = round(random.uniform(100, 3000), 2)
-    skus.append((sku_id, name, category, unit_cost))
-for s in skus:
-    conn.execute("INSERT INTO SKU (sku_id, product_name, category, unit_cost) VALUES (?,?,?,?)", s)
-
-# ---------- Initial (often suboptimal) Bin Assignments ----------
-# Deliberately scatter some fast-moving SKUs into far bins, to give the
-# slotting engine something meaningful to fix.
-all_bin_ids = [b[0] for b in bins_]
-assign_date = "2026-07-01"
-sku_velocity_tier = {}  # sku_id -> intended pick frequency tier, used to bias assignment
-for idx, (sku_id, *_ ) in enumerate(skus):
-    if idx < 6:
-        tier = "fast"
-    elif idx < 15:
-        tier = "medium"
-    else:
-        tier = "slow"
-    sku_velocity_tier[sku_id] = tier
-
-    # Deliberately misplace ~half the fast movers into far bins (Z3) to
-    # simulate a real, imperfect warehouse layout.
-    if tier == "fast" and idx % 2 == 0:
-        candidate_bins = [b for b in all_bin_ids if b.startswith("Z3")]
-    else:
-        candidate_bins = all_bin_ids
-    chosen_bin = random.choice(candidate_bins)
-    conn.execute(
-        "INSERT INTO SKUBinAssignment (sku_id, bin_id, assigned_date) VALUES (?,?,?)",
-        (sku_id, chosen_bin, assign_date)
+    # ---------- SKUs (assigned to random bins) ----------
+    skus = []
+    used_ids = set()
+    for i in range(1, N_SKUS + 1):
+        category = random.choice(CATEGORIES)
+        product_name = f"{random.choice(PRODUCT_ADJ)} {random.choice(PRODUCT_NOUN[category])}"
+        sku_id = f"SKU{i:03d}"
+        bin_id, rack_id, zone_id, capacity, distance = random.choice(bins_)
+        unit_cost = round(random.uniform(50, 4000), 2)
+        assigned_date = rand_date(180).isoformat()
+        skus.append((sku_id, product_name, category, bin_id, zone_id, distance, assigned_date, unit_cost))
+        used_ids.add(sku_id)
+    cur.executemany(
+        """INSERT INTO skus
+           (sku_id, product_name, category, bin_id, zone_id, distance_to_dispatch_m, assigned_date, unit_cost)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        skus,
     )
-conn.commit()
 
-# ---------- Pick Task Logs (30 days) ----------
-bin_lookup = {b[0]: b for b in bins_}  # bin_id -> (bin_id, rack_id, zone_id, code, cap, dist)
-sku_bin = {}
-# fetch what we just assigned (re-derive in python since we just inserted it)
-conn2 = get_conn()
-assign_df = conn2.read_df("SELECT sku_id, bin_id FROM SKUBinAssignment")
-for _, row in assign_df.iterrows():
-    sku_bin[row["sku_id"]] = row["bin_id"]
+    # ---------- Pick tasks ----------
+    # Give each SKU a random "popularity" weight so ABC pattern emerges naturally
+    weights = {s[0]: random.paretovariate(1.5) for s in skus}
+    sku_pool = list(used_ids)
+    tasks = []
+    for i in range(1, N_PICK_TASKS + 1):
+        sku_id = random.choices(sku_pool, weights=[weights[s] for s in sku_pool], k=1)[0]
+        sku_row = next(s for s in skus if s[0] == sku_id)
+        bin_id, zone_id, base_dist = sku_row[3], sku_row[4], sku_row[5]
+        strategy = random.choices(STRATEGIES, weights=[0.5, 0.35, 0.15])[0]
+        shift = random.choice(SHIFTS)
+        picker_id = random.choice(PICKERS)
+        pick_date = rand_date(PICK_HISTORY_DAYS).isoformat()
+        travel = max(round(base_dist + random.uniform(-5, 15), 1), 1)
+        base_time = 20 if strategy == "Batch" else (35 if strategy == "Wave" else 30)
+        pick_time = max(round(base_time + travel * 0.6 + random.uniform(-8, 12)), 5)
+        had_error = 1 if random.random() < 0.04 else 0
+        tasks.append((i, sku_id, bin_id, zone_id, picker_id, pick_date, shift, strategy, travel, pick_time, had_error))
+    cur.executemany(
+        """INSERT INTO pick_tasks
+           (task_id, sku_id, bin_id, zone_id, picker_id, pick_date, shift, strategy,
+            travel_distance_m, pick_time_seconds, had_error)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        tasks,
+    )
 
-pickers = [f"P{i}" for i in range(1, 7)]
-shifts = ["Morning", "Afternoon", "Night"]
-strategies = ["Single", "Batch", "Wave"]
-start_date = datetime(2026, 7, 1)
+    # ---------- ABC classification + 30-day pick frequency ----------
+    # Standard Pareto split: top 20% of SKUs by pick volume = A, next 30% = B, rest = C
+    cutoff_30d = (date.today() - timedelta(days=30)).isoformat()
+    counts_all = {s: 0 for s in used_ids}
+    counts_30d = {s: 0 for s in used_ids}
+    for t in tasks:
+        sku_id, pick_date = t[1], t[5]
+        counts_all[sku_id] += 1
+        if pick_date >= cutoff_30d:
+            counts_30d[sku_id] += 1
 
-task_rows = []
-for day in range(30):
-    date_str = (start_date + timedelta(days=day)).strftime("%Y-%m-%d")
-    for sku_id in [s[0] for s in skus]:
-        tier = sku_velocity_tier[sku_id]
-        base_picks = {"fast": 8, "medium": 3, "slow": 1}[tier]
-        n_picks_today = np.random.poisson(base_picks)
-        bin_id = sku_bin[sku_id]
-        _, rack_id, zone_id, _, _, distance = bin_lookup[bin_id]
-        for _ in range(n_picks_today):
-            strategy = random.choices(strategies, weights=[0.5, 0.35, 0.15])[0]
-            # batch/wave picking reduces effective travel distance per pick
-            strategy_factor = {"Single": 1.0, "Batch": 0.7, "Wave": 0.55}[strategy]
-            travel = max(2, distance * strategy_factor + np.random.normal(0, 3))
-            pick_time = max(8, travel * 0.9 + np.random.normal(15, 4))
-            had_error = 1 if np.random.rand() < 0.03 else 0
-            picker = random.choice(pickers)
-            shift = random.choice(shifts)
-            task_rows.append((
-                sku_id, bin_id, zone_id, picker, date_str, shift, strategy,
-                round(travel, 1), round(pick_time, 1), had_error
-            ))
+    ranked = sorted(used_ids, key=lambda s: counts_all[s], reverse=True)
+    n = len(ranked)
+    a_cut = max(round(n * 0.2), 1)
+    b_cut = max(round(n * 0.5), a_cut + 1)
+    abc_map = {}
+    for idx, sku_id in enumerate(ranked):
+        abc_map[sku_id] = "A" if idx < a_cut else ("B" if idx < b_cut else "C")
 
-conn.executemany("""
-    INSERT INTO PickTaskLog
-    (sku_id, bin_id, zone_id, picker_id, pick_date, shift, strategy, travel_distance_m, pick_time_seconds, had_error)
-    VALUES (?,?,?,?,?,?,?,?,?,?)
-""", task_rows)
+    cur.executemany(
+        "UPDATE skus SET abc_class = ?, pick_frequency_30d = ? WHERE sku_id = ?",
+        [(abc_map[s], counts_30d[s], s) for s in used_ids],
+    )
 
-conn.commit()
-conn.close()
-print(f"Sample data generated: {len(zones)} zones, {len(racks)} racks, {len(bins_)} bins, "
-      f"{len(skus)} SKUs, {len(assign_df)} bin assignments, {len(task_rows)} pick task logs")
+    conn.commit()
+    conn.close()
+
+    print(f"Done. Generated {len(zones)} zones, {len(racks)} racks, {len(bins_)} bins, "
+          f"{len(skus)} SKUs, {len(tasks)} pick tasks -> {DB_PATH}")
+    print(f"ABC split: A={sum(1 for v in abc_map.values() if v=='A')}, "
+          f"B={sum(1 for v in abc_map.values() if v=='B')}, "
+          f"C={sum(1 for v in abc_map.values() if v=='C')}")
+
+
+if __name__ == "__main__":
+    main()
