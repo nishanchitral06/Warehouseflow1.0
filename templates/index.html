@@ -416,6 +416,7 @@
       <button class="tab-btn" data-tab="slotting">📍 Slotting</button>
       <button class="tab-btn" data-tab="picking">⏱️ Picking Performance</button>
       <button class="tab-btn" data-tab="browse">🔍 Browse All Data</button>
+      <button class="tab-btn" data-tab="map">🗺️ Warehouse Map</button>
     </div>
 
     <!-- OVERVIEW -->
@@ -480,9 +481,15 @@
         <button class="subtab-btn" data-sub="skus">🏷️ SKUs &amp; Assignments</button>
       </div>
       <div id="sub-zones">
-        <div class="table-wrap"><table id="zones-table"></table></div>
+        <input id="zone-delete-id" placeholder="Zone ID to delete" style="padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);margin-bottom:10px;background:var(--input-bg);color:var(--text);">
+        <button onclick="deleteZone()" style="padding:6px 14px;border-radius:6px;border:1px solid #e53935;cursor:pointer;background:#e53935;color:#fff;">🗑️ Delete Zone</button>
+        <span class="form-msg" id="zone-delete-msg"></span>
+        <div class="table-wrap" style="margin-top:10px;"><table id="zones-table"></table></div>
         <br>
-        <div class="table-wrap"><table id="racks-table"></table></div>
+        <input id="rack-delete-id" placeholder="Rack ID to delete" style="padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);margin-bottom:10px;background:var(--input-bg);color:var(--text);">
+        <button onclick="deleteRack()" style="padding:6px 14px;border-radius:6px;border:1px solid #e53935;cursor:pointer;background:#e53935;color:#fff;">🗑️ Delete Rack</button>
+        <span class="form-msg" id="rack-delete-msg"></span>
+        <div class="table-wrap" style="margin-top:10px;"><table id="racks-table"></table></div>
       </div>
       <div id="sub-bins" style="display:none;">
         <input id="bin-search" placeholder="Search by Bin ID" style="padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);margin-bottom:10px;background:var(--input-bg);color:var(--text);">
@@ -499,6 +506,24 @@
         <span class="form-msg" id="sku-delete-msg"></span>
         <div class="table-wrap" style="margin-top:10px;"><table id="skus-table"></table></div>
       </div>
+    </div>
+
+    <!-- WAREHOUSE MAP -->
+    <div class="tab-panel" id="tab-map">
+      <div class="section-title">🗺️ Interactive Warehouse Map</div>
+      <p style="font-size:12.5px; opacity:0.75; margin-bottom:12px; line-height:1.5;">
+        Click a bin to set your <b>start</b> point, then click another bin to set the <b>end</b> point.
+        Distance is calculated using a return-routing model — the same simplified logic real warehouses use:
+        a picker walks back to the main aisle before heading to a different rack or zone, rather than cutting
+        directly between shelves.
+      </p>
+      <div style="display:flex; gap:10px; align-items:stretch; margin-bottom:14px; flex-wrap:wrap;">
+        <button onclick="resetMapSelection()" style="padding:6px 14px;border-radius:6px;border:1px solid var(--card-border);cursor:pointer;background:var(--surface);color:var(--text);white-space:nowrap;">↺ Reset Selection</button>
+        <div id="map-result" style="flex:1;min-width:220px;padding:10px 14px;border-radius:8px;background:var(--surface);border:1px solid var(--card-border);font-size:13px;line-height:1.5;">
+          Click a bin to set the starting point.
+        </div>
+      </div>
+      <div id="warehouse-map-svg-wrap" style="overflow-x:auto; border-radius:10px;"></div>
     </div>
 
   </div>
@@ -632,6 +657,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     if (btn.dataset.tab === "slotting") loadSlotting();
     if (btn.dataset.tab === "picking") loadPicking();
     if (btn.dataset.tab === "browse") loadZonesBrowse();
+    if (btn.dataset.tab === "map") loadWarehouseMap();
   });
 });
 document.querySelectorAll(".subtab-btn").forEach(btn => {
@@ -766,6 +792,161 @@ async function loadSkusBrowse() {
   ]);
 }
 
+// ---------- Warehouse Map ----------
+const ZONE_MAP_COLORS = ["#C1502E", "#D98E4A", "#7A8B6F", "#6B8CAE", "#9B6B9E", "#4CAF91", "#B08968", "#5C6BC0"];
+let mapBinRects = {};
+let mapSelection = { start: null, end: null };
+
+async function loadWarehouseMap() {
+  const res = await fetch("/api/warehouse_map");
+  const d = await res.json();
+  renderWarehouseMap(d);
+  resetMapSelection();
+}
+
+function renderWarehouseMap(d) {
+  const svgNS = "http://www.w3.org/2000/svg";
+  const container = document.getElementById("warehouse-map-svg-wrap");
+  container.innerHTML = "";
+  mapBinRects = {};
+
+  const zones = d.zones, racks = d.racks, bins = d.bins;
+  if (!zones.length) { container.innerHTML = "<p style='opacity:0.7;'>No zones yet. Add one from the sidebar.</p>"; return; }
+
+  // Order zones by their average distance-to-dispatch, so the map reflects
+  // real stored distances (closest zone to shipping appears first/top).
+  const zoneAvgDist = {};
+  zones.forEach(z => {
+    const zBins = bins.filter(b => b.zone_id === z.zone_id);
+    zoneAvgDist[z.zone_id] = zBins.length ? zBins.reduce((a, b) => a + b.distance_to_dispatch_m, 0) / zBins.length : 0;
+  });
+  const orderedZones = [...zones].sort((a, b) => zoneAvgDist[a.zone_id] - zoneAvgDist[b.zone_id]);
+
+  const ZONE_BAND_H = 150, RACK_SPACING = 110, BIN_SIZE = 20, BIN_GAP = 6;
+  const LEFT_MARGIN = 170, TOP_MARGIN = 70, AISLE_X = LEFT_MARGIN - 45;
+
+  let maxRacksInAnyZone = 1;
+  orderedZones.forEach(z => {
+    maxRacksInAnyZone = Math.max(maxRacksInAnyZone, racks.filter(r => r.zone_id === z.zone_id).length);
+  });
+
+  const svgWidth = LEFT_MARGIN + maxRacksInAnyZone * RACK_SPACING + 60;
+  const svgHeight = TOP_MARGIN + orderedZones.length * ZONE_BAND_H + 30;
+
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", Math.max(svgWidth, 560));
+  svg.setAttribute("viewBox", `0 0 ${svgWidth} ${svgHeight}`);
+  svg.style.background = "var(--surface)";
+  svg.style.display = "block";
+
+  // Main aisle (the "return routing" spine every zone connects back to)
+  const aisle = document.createElementNS(svgNS, "line");
+  aisle.setAttribute("x1", AISLE_X); aisle.setAttribute("y1", TOP_MARGIN - 30);
+  aisle.setAttribute("x2", AISLE_X); aisle.setAttribute("y2", svgHeight - 20);
+  aisle.setAttribute("stroke", "var(--text-muted)"); aisle.setAttribute("stroke-width", "3");
+  aisle.setAttribute("stroke-dasharray", "6,4");
+  svg.appendChild(aisle);
+
+  const dispatchLabel = document.createElementNS(svgNS, "text");
+  dispatchLabel.setAttribute("x", AISLE_X); dispatchLabel.setAttribute("y", TOP_MARGIN - 40);
+  dispatchLabel.setAttribute("text-anchor", "middle"); dispatchLabel.setAttribute("font-size", "13");
+  dispatchLabel.setAttribute("font-weight", "700"); dispatchLabel.setAttribute("fill", "var(--text)");
+  dispatchLabel.textContent = "🚚 DISPATCH";
+  svg.appendChild(dispatchLabel);
+
+  orderedZones.forEach((z, zi) => {
+    const zoneColor = ZONE_MAP_COLORS[zi % ZONE_MAP_COLORS.length];
+    const bandY = TOP_MARGIN + zi * ZONE_BAND_H;
+    const bandH = ZONE_BAND_H - 16;
+
+    const band = document.createElementNS(svgNS, "rect");
+    band.setAttribute("x", LEFT_MARGIN - 12); band.setAttribute("y", bandY);
+    band.setAttribute("width", svgWidth - LEFT_MARGIN - 6); band.setAttribute("height", bandH);
+    band.setAttribute("fill", zoneColor); band.setAttribute("opacity", "0.08"); band.setAttribute("rx", "8");
+    svg.appendChild(band);
+
+    const label = document.createElementNS(svgNS, "text");
+    label.setAttribute("x", 4); label.setAttribute("y", bandY + 18);
+    label.setAttribute("font-size", "12.5"); label.setAttribute("font-weight", "700");
+    label.setAttribute("fill", zoneColor);
+    label.textContent = z.zone_id + " \u2014 " + z.zone_name;
+    svg.appendChild(label);
+
+    const connector = document.createElementNS(svgNS, "line");
+    connector.setAttribute("x1", AISLE_X); connector.setAttribute("y1", bandY + bandH / 2);
+    connector.setAttribute("x2", LEFT_MARGIN - 12); connector.setAttribute("y2", bandY + bandH / 2);
+    connector.setAttribute("stroke", zoneColor); connector.setAttribute("stroke-width", "2");
+    svg.appendChild(connector);
+
+    const zRacks = racks.filter(r => r.zone_id === z.zone_id).sort((a, b) => a.rack_id.localeCompare(b.rack_id));
+    zRacks.forEach((rack, ri) => {
+      const rackX = LEFT_MARGIN + ri * RACK_SPACING;
+      const rackLabel = document.createElementNS(svgNS, "text");
+      rackLabel.setAttribute("x", rackX); rackLabel.setAttribute("y", bandY + 34);
+      rackLabel.setAttribute("font-size", "9.5"); rackLabel.setAttribute("fill", "var(--text-muted)");
+      rackLabel.textContent = rack.rack_id;
+      svg.appendChild(rackLabel);
+
+      const rBins = bins.filter(b => b.rack_id === rack.rack_id).sort((a, b) => a.bin_id.localeCompare(b.bin_id));
+      rBins.forEach((bin, bi) => {
+        const bx = rackX, by = bandY + 42 + bi * (BIN_SIZE + BIN_GAP);
+        const rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", bx); rect.setAttribute("y", by);
+        rect.setAttribute("width", BIN_SIZE); rect.setAttribute("height", BIN_SIZE);
+        rect.setAttribute("rx", "4"); rect.setAttribute("fill", zoneColor); rect.setAttribute("opacity", "0.75");
+        rect.setAttribute("stroke", "var(--card-border)"); rect.setAttribute("stroke-width", "1");
+        rect.style.cursor = "pointer";
+        rect.dataset.defaultFill = zoneColor;
+        rect.addEventListener("click", () => onMapBinClick(bin.bin_id, rect));
+
+        const titleEl = document.createElementNS(svgNS, "title");
+        titleEl.textContent = `${bin.bin_id} \u2014 ${bin.distance_to_dispatch_m} m from dispatch`;
+        rect.appendChild(titleEl);
+
+        svg.appendChild(rect);
+        mapBinRects[bin.bin_id] = rect;
+      });
+    });
+  });
+
+  container.appendChild(svg);
+}
+
+async function onMapBinClick(binId, rectEl) {
+  if (!mapSelection.start || (mapSelection.start && mapSelection.end)) {
+    resetMapHighlights();
+    mapSelection = { start: binId, end: null };
+    rectEl.setAttribute("fill", "#2e7d32"); rectEl.setAttribute("opacity", "1");
+    document.getElementById("map-result").innerHTML = `Start set: <b>${binId}</b> \u2014 now click an end bin.`;
+  } else if (binId !== mapSelection.start) {
+    mapSelection.end = binId;
+    rectEl.setAttribute("fill", "#c62828"); rectEl.setAttribute("opacity", "1");
+    document.getElementById("map-result").innerHTML = "Calculating shortest distance...";
+    const r = await postJson("/api/shortest_path", { start_bin_id: mapSelection.start, end_bin_id: mapSelection.end });
+    if (r.ok) {
+      document.getElementById("map-result").innerHTML =
+        `<b>${mapSelection.start} \u2192 ${mapSelection.end}</b><br>` +
+        `Shortest distance: <b>${r.data.distance_m} m</b><br>` +
+        `<span style="opacity:0.75;">${r.data.route}</span>`;
+    } else {
+      document.getElementById("map-result").innerText = r.data.error || "Could not compute distance.";
+    }
+  }
+}
+
+function resetMapHighlights() {
+  Object.values(mapBinRects).forEach(el => {
+    el.setAttribute("fill", el.dataset.defaultFill);
+    el.setAttribute("opacity", "0.75");
+  });
+}
+
+function resetMapSelection() {
+  resetMapHighlights();
+  mapSelection = { start: null, end: null };
+  document.getElementById("map-result").innerHTML = "Click a bin to set the starting point.";
+}
+
 // ---------- Dropdown population ----------
 async function populateDropdowns() {
   const res = await fetch("/api/dropdowns");
@@ -830,6 +1011,32 @@ async function deleteSku() {
     el.className = "form-msg ok"; el.innerText = "Deleted.";
     document.getElementById("sku-delete-id").value = "";
     loadSkusBrowse(); populateDropdowns(); loadOverview();
+  } else {
+    el.className = "form-msg err"; el.innerText = r.data.error || "Could not delete.";
+  }
+}
+async function deleteZone() {
+  const zoneId = document.getElementById("zone-delete-id").value.trim();
+  const el = document.getElementById("zone-delete-msg");
+  if (!zoneId) { el.className = "form-msg err"; el.innerText = "Enter a Zone ID."; return; }
+  const r = await postJson("/api/delete_zone", { zone_id: zoneId });
+  if (r.ok) {
+    el.className = "form-msg ok"; el.innerText = "Deleted (and all its racks/bins).";
+    document.getElementById("zone-delete-id").value = "";
+    loadZonesBrowse(); populateDropdowns(); loadOverview();
+  } else {
+    el.className = "form-msg err"; el.innerText = r.data.error || "Could not delete.";
+  }
+}
+async function deleteRack() {
+  const rackId = document.getElementById("rack-delete-id").value.trim();
+  const el = document.getElementById("rack-delete-msg");
+  if (!rackId) { el.className = "form-msg err"; el.innerText = "Enter a Rack ID."; return; }
+  const r = await postJson("/api/delete_rack", { rack_id: rackId });
+  if (r.ok) {
+    el.className = "form-msg ok"; el.innerText = "Deleted (and all its bins).";
+    document.getElementById("rack-delete-id").value = "";
+    loadZonesBrowse(); populateDropdowns(); loadOverview();
   } else {
     el.className = "form-msg err"; el.innerText = r.data.error || "Could not delete.";
   }
