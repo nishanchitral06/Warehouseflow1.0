@@ -5,6 +5,7 @@ Run locally:    python app.py
 Run on Render:  gunicorn app:app
 """
 import os
+import re
 from datetime import date
 from flask import Flask, render_template, request, jsonify
 from db import get_conn, DBIntegrityError
@@ -304,6 +305,143 @@ def delete_sku():
         return jsonify({"ok": False, "error": str(e)}), 400
     finally:
         conn.close()
+
+
+@app.route("/api/delete_zone", methods=["POST"])
+def delete_zone():
+    data = request.json
+    zone_id = data.get("zone_id")
+    if not zone_id:
+        return jsonify({"ok": False, "error": "Zone ID is required."}), 400
+    conn = get_conn()
+    try:
+        bins_df = conn.read_df("SELECT bin_id FROM Bin WHERE zone_id = ?", [zone_id])
+        for b in bins_df["bin_id"].tolist():
+            conn.execute("DELETE FROM SKUBinAssignment WHERE bin_id = ?", (b,))
+            conn.execute("DELETE FROM PickTaskLog WHERE bin_id = ?", (b,))
+            conn.execute("DELETE FROM SlottingRecommendation WHERE current_bin_id = ? OR recommended_bin_id = ?", (b, b))
+        conn.execute("DELETE FROM PickTaskLog WHERE zone_id = ?", (zone_id,))
+        conn.execute("DELETE FROM Bin WHERE zone_id = ?", (zone_id,))
+        conn.execute("DELETE FROM Rack WHERE zone_id = ?", (zone_id,))
+        conn.execute("DELETE FROM Zone WHERE zone_id = ?", (zone_id,))
+        conn.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    finally:
+        conn.close()
+
+
+@app.route("/api/delete_rack", methods=["POST"])
+def delete_rack():
+    data = request.json
+    rack_id = data.get("rack_id")
+    if not rack_id:
+        return jsonify({"ok": False, "error": "Rack ID is required."}), 400
+    conn = get_conn()
+    try:
+        bins_df = conn.read_df("SELECT bin_id FROM Bin WHERE rack_id = ?", [rack_id])
+        for b in bins_df["bin_id"].tolist():
+            conn.execute("DELETE FROM SKUBinAssignment WHERE bin_id = ?", (b,))
+            conn.execute("DELETE FROM PickTaskLog WHERE bin_id = ?", (b,))
+            conn.execute("DELETE FROM SlottingRecommendation WHERE current_bin_id = ? OR recommended_bin_id = ?", (b, b))
+        conn.execute("DELETE FROM Bin WHERE rack_id = ?", (rack_id,))
+        conn.execute("DELETE FROM Rack WHERE rack_id = ?", (rack_id,))
+        conn.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Warehouse Map + Shortest Path
+# ---------------------------------------------------------------------------
+@app.route("/api/warehouse_map")
+def api_warehouse_map():
+    conn = get_conn()
+    zones = conn.read_df("SELECT * FROM Zone")
+    racks = conn.read_df("SELECT * FROM Rack")
+    bins_df = conn.read_df("SELECT * FROM Bin")
+    conn.close()
+    return jsonify({
+        "zones": zones.to_dict(orient="records"),
+        "racks": racks.to_dict(orient="records"),
+        "bins": bins_df.to_dict(orient="records"),
+    })
+
+
+def _rack_index(rack_id):
+    """Pull the trailing rack number out of an id like 'Z1-R2' -> 2."""
+    m = re.search(r"R(\d+)$", str(rack_id))
+    return int(m.group(1)) if m else 0
+
+
+@app.route("/api/shortest_path", methods=["POST"])
+def api_shortest_path():
+    """
+    Estimates walking distance between two bins using a 'return-routing'
+    model - a standard, simplified warehouse routing heuristic: a picker
+    walks from their current bin back out to the main aisle before heading
+    toward a different rack or zone, rather than cutting directly between
+    shelves (which usually isn't physically possible in a real warehouse).
+
+    - Same rack: direct distance between the two bins' positions.
+    - Same zone, different rack: back out to the cross-aisle, over to the
+      other rack, then in - approximated as their distance-to-dispatch gap
+      plus a lateral cost per rack aisle crossed.
+    - Different zones: back out to the main dispatch aisle and out again to
+      the other zone - approximated as the sum of both bins' distance to
+      dispatch.
+    """
+    data = request.json
+    start_id = data.get("start_bin_id")
+    end_id = data.get("end_bin_id")
+    if not start_id or not end_id:
+        return jsonify({"ok": False, "error": "Both a start and end bin are required."}), 400
+
+    conn = get_conn()
+    bins_df = conn.read_df("SELECT * FROM Bin")
+    conn.close()
+
+    start_rows = bins_df[bins_df.bin_id == start_id]
+    end_rows = bins_df[bins_df.bin_id == end_id]
+    if start_rows.empty or end_rows.empty:
+        return jsonify({"ok": False, "error": "Could not find one of those bins."}), 400
+
+    start = start_rows.iloc[0]
+    end = end_rows.iloc[0]
+
+    if start_id == end_id:
+        return jsonify({
+            "ok": True, "distance_m": 0.0,
+            "route": "Same bin - no travel needed.", "path_type": "none"
+        })
+
+    RACK_LATERAL_GAP_M = 6.0  # approx. walking width between adjacent rack aisles
+
+    if start["rack_id"] == end["rack_id"]:
+        dist = abs(float(start["distance_to_dispatch_m"]) - float(end["distance_to_dispatch_m"]))
+        path_type = "same_rack"
+        route = f"Same rack ({start['rack_id']}) - walk directly between the two bins."
+    elif start["zone_id"] == end["zone_id"]:
+        rack_gap = abs(_rack_index(start["rack_id"]) - _rack_index(end["rack_id"]))
+        lateral = rack_gap * RACK_LATERAL_GAP_M
+        dist = abs(float(start["distance_to_dispatch_m"]) - float(end["distance_to_dispatch_m"])) + lateral
+        path_type = "same_zone"
+        route = f"Same zone ({start['zone_id']}), different racks - via the zone's cross-aisle."
+    else:
+        dist = float(start["distance_to_dispatch_m"]) + float(end["distance_to_dispatch_m"])
+        path_type = "cross_zone"
+        route = f"Different zones ({start['zone_id']} \u2192 {end['zone_id']}) - return-routing via the main dispatch aisle."
+
+    return jsonify({
+        "ok": True,
+        "distance_m": round(float(dist), 1),
+        "route": route,
+        "path_type": path_type,
+    })
 
 
 if __name__ == "__main__":
